@@ -154,7 +154,10 @@ showbiz/
 │   │   ├── api/                  # API service infra (K8s deployment, service, ingress)
 │   │   ├── mysql/                # MySQL database (StatefulSet or RDS/Cloud SQL)
 │   │   ├── cdn/                  # CDN for UI static assets
-│   │   └── networking/           # VPC, subnets, load balancers
+│   │   ├── networking/           # VPC, subnets, load balancers
+│   │   └── k8s/                  # Kubernetes-related modules
+│   │       ├── minikube/         # Creates Minikube cluster (local env only)
+│   │       └── argocd/           # Deploys ArgoCD helm chart
 │   └── env/                      # Terragrunt HCL files per environment
 │       ├── terragrunt.hcl        # Root config (provider, backend, common vars)
 │       ├── local/                # Local development on Minikube
@@ -167,6 +170,15 @@ showbiz/
 │       │   └── terragrunt.hcl
 │       └── production/
 │           └── terragrunt.hcl
+│
+├── helm/                          # Helm charts and values
+│   ├── charts/                    # Charts dedicated to Showbiz
+│   │   └── showbiz-app/           # Generic chart for deploying Showbiz services (e.g., api)
+│   │       ├── Chart.yaml
+│   │       ├── values.yaml
+│   │       └── templates/
+│   └── local/                     # Local helm values deployed by ArgoCD
+│       └── api.yaml               # Values override for the API service
 │
 ├── examples/                      # Example projects deployed using Showbiz
 │   └── README.md                  # Placeholder — examples coming soon

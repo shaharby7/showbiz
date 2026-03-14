@@ -162,12 +162,12 @@
 
 ---
 
-## ADR-019: Infrastructure Directory Structure
+## ADR-019: Infrastructure and Helm Directory Structure
 
 **Status:** Accepted  
-**Context:** Need a clear separation between reusable Terraform modules and per-environment deployment configuration.  
-**Decision:** `infra/modules/` contains Terraform modules (api, mysql, cdn, networking). `infra/env/` contains Terragrunt HCL files per environment (local, staging, production). Local environment deploys to Minikube for development. Helm charts are removed in favor of Terraform-managed Kubernetes resources.  
-**Consequences:** Terragrunt provides DRY configuration across environments. Local dev can mirror production topology via Minikube. Module changes are testable locally before promoting to staging/production.
+**Context:** Need a clear separation between reusable Terraform modules, per-environment deployment configuration, and Helm charts.  
+**Decision:** `infra/modules/` contains Terraform modules (api, mysql, cdn, networking, k8s/). `infra/modules/k8s/minikube` creates a Minikube cluster for local dev, `infra/modules/k8s/argocd` deploys the ArgoCD helm chart. `infra/env/` contains Terragrunt HCL files per environment (local, staging, production). `helm/charts/` holds Showbiz-specific charts (`showbiz-app` is a generic chart reusable across services). `helm/local/` contains per-service values overrides deployed by ArgoCD in the local environment.  
+**Consequences:** Terragrunt provides DRY configuration across environments. Local dev mirrors production topology via Minikube + ArgoCD. Helm charts are decoupled from Terraform, enabling ArgoCD-driven GitOps deployments.
 
 ---
 
