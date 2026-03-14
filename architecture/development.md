@@ -149,29 +149,24 @@ showbiz/
 │   ├── go.mod                     # Go deps (for Go-based E2E tests)
 │   └── README.md                  # How to run E2E tests
 │
-├── infrastructure/                # Infrastructure-as-code
-│   ├── terraform/                 # Terraform modules for Showbiz platform infra
-│   │   ├── modules/
-│   │   │   ├── api/               # API service infra (ECS/K8s, RDS, etc.)
-│   │   │   ├── cdn/               # CDN for UI static assets
-│   │   │   ├── networking/        # VPC, subnets, load balancers
-│   │   │   └── database/          # MySQL RDS / Cloud SQL
-│   │   └── environments/
-│   │       ├── staging/
-│   │       └── production/
-│   ├── terragrunt/                # Terragrunt wrappers for DRY config
-│   │   ├── terragrunt.hcl         # Root config
-│   │   ├── staging/
-│   │   │   └── terragrunt.hcl
-│   │   └── production/
-│   │       └── terragrunt.hcl
-│   └── helm/                      # Helm charts
-│       └── showbiz-api/           # Chart for the API service
-│           ├── Chart.yaml
-│           ├── values.yaml
-│           ├── values-staging.yaml
-│           ├── values-production.yaml
-│           └── templates/
+├── infra/                        # Infrastructure-as-code
+│   ├── modules/                  # Terraform modules
+│   │   ├── api/                  # API service infra (K8s deployment, service, ingress)
+│   │   ├── mysql/                # MySQL database (StatefulSet or RDS/Cloud SQL)
+│   │   ├── cdn/                  # CDN for UI static assets
+│   │   └── networking/           # VPC, subnets, load balancers
+│   └── env/                      # Terragrunt HCL files per environment
+│       ├── terragrunt.hcl        # Root config (provider, backend, common vars)
+│       ├── local/                # Local development on Minikube
+│       │   ├── terragrunt.hcl    # Local environment config
+│       │   ├── api/
+│       │   │   └── terragrunt.hcl
+│       │   └── mysql/
+│       │       └── terragrunt.hcl
+│       ├── staging/
+│       │   └── terragrunt.hcl
+│       └── production/
+│           └── terragrunt.hcl
 │
 ├── examples/                      # Example projects deployed using Showbiz
 │   └── README.md                  # Placeholder — examples coming soon

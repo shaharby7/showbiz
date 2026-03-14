@@ -162,4 +162,13 @@
 
 ---
 
+## ADR-019: Infrastructure Directory Structure
+
+**Status:** Accepted  
+**Context:** Need a clear separation between reusable Terraform modules and per-environment deployment configuration.  
+**Decision:** `infra/modules/` contains Terraform modules (api, mysql, cdn, networking). `infra/env/` contains Terragrunt HCL files per environment (local, staging, production). Local environment deploys to Minikube for development. Helm charts are removed in favor of Terraform-managed Kubernetes resources.  
+**Consequences:** Terragrunt provides DRY configuration across environments. Local dev can mirror production topology via Minikube. Module changes are testable locally before promoting to staging/production.
+
+---
+
 > Add new ADRs below as decisions are made during architecture design.
