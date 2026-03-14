@@ -87,6 +87,7 @@ async function deleteProject() {
     if (projectStore.currentProject?.id === projectId) {
       projectStore.selectProject(null)
     }
+    await projectStore.fetchProjects(orgId)
     router.push({ name: 'projects' })
   } catch (e: any) {
     deleteError.value = e.message || 'Failed to delete project'

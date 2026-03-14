@@ -51,6 +51,7 @@ async function createProject() {
     const project = await api.projects.create(orgId, createForm.value)
     showCreateDialog.value = false
     createForm.value = { name: '', description: '' }
+    await projectStore.fetchProjects(orgId)
     projectStore.selectProject(project)
     await fetchProjects()
   } catch (e: any) {
