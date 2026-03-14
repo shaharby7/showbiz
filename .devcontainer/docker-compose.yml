@@ -19,9 +19,9 @@ services:
       MYSQL_USER: showbiz
       MYSQL_PASSWORD: showbiz_dev
     ports:
-      - "3306:3306"
+      - "13306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - showbiz-mysql-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -29,4 +29,4 @@ services:
       retries: 10
 
 volumes:
-  mysql-data:
+  showbiz-mysql-data:

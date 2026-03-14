@@ -70,7 +70,7 @@ The default values in `.env.example` match the devcontainer MySQL setup:
 | Variable | Default | Description |
 |---|---|---|
 | `SHOWBIZ_DB_HOST` | `localhost` | MySQL host |
-| `SHOWBIZ_DB_PORT` | `3306` | MySQL port |
+| `SHOWBIZ_DB_PORT` | `13306` | MySQL port |
 | `SHOWBIZ_DB_USER` | `showbiz` | MySQL user |
 | `SHOWBIZ_DB_PASSWORD` | `showbiz_dev` | MySQL password |
 | `SHOWBIZ_DB_NAME` | `showbiz` | MySQL database name |
