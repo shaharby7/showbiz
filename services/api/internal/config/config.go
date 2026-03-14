@@ -6,24 +6,26 @@ import (
 )
 
 type Config struct {
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	JWTSecret  string
-	APIPort    string
+	DBHost              string
+	DBPort              string
+	DBUser              string
+	DBPassword          string
+	DBName              string
+	JWTSecret           string
+	APIPort             string
+	FakeProviderURL     string
 }
 
 func Load() *Config {
 	return &Config{
-		DBHost:     getEnv("SHOWBIZ_DB_HOST", "localhost"),
-		DBPort:     getEnv("SHOWBIZ_DB_PORT", "3306"),
-		DBUser:     getEnv("SHOWBIZ_DB_USER", "showbiz"),
-		DBPassword: getEnv("SHOWBIZ_DB_PASSWORD", "showbiz_dev"),
-		DBName:     getEnv("SHOWBIZ_DB_NAME", "showbiz"),
-		JWTSecret:  getEnv("SHOWBIZ_JWT_SECRET", "dev-secret-do-not-use-in-production"),
-		APIPort:    getEnv("SHOWBIZ_API_PORT", "8080"),
+		DBHost:              getEnv("SHOWBIZ_DB_HOST", "localhost"),
+		DBPort:              getEnv("SHOWBIZ_DB_PORT", "3306"),
+		DBUser:              getEnv("SHOWBIZ_DB_USER", "showbiz"),
+		DBPassword:          getEnv("SHOWBIZ_DB_PASSWORD", "showbiz_dev"),
+		DBName:              getEnv("SHOWBIZ_DB_NAME", "showbiz"),
+		JWTSecret:           getEnv("SHOWBIZ_JWT_SECRET", "dev-secret-do-not-use-in-production"),
+		APIPort:             getEnv("SHOWBIZ_API_PORT", "8080"),
+		FakeProviderURL:     getEnv("SHOWBIZ_FAKEPROVIDER_URL", "http://localhost:8081"),
 	}
 }
 

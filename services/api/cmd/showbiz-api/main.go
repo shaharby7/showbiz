@@ -47,6 +47,7 @@ func main() {
 
 	providerRegistry := provider.NewRegistry()
 	providerRegistry.Register("stub", provider.NewStubProvider())
+	providerRegistry.Register("fakeprovider", provider.NewFakeProvider(cfg.FakeProviderURL))
 	providerHandler := handler.NewProviderHandler(providerRegistry)
 
 	connectionService := service.NewConnectionService(connectionRepo, providerRegistry)

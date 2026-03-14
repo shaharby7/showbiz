@@ -24,3 +24,6 @@ applications:
   ui:
     enabled: true
     namespace: showbiz
+  fakeprovider:
+    enabled: true
+    namespace: showbiz

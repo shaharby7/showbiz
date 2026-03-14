@@ -19,7 +19,12 @@ infra/                              # Infrastructure-as-code
 │   │   │   ├── variables.tf
 │   │   │   ├── outputs.tf
 │   │   │   └── versions.tf
-│   │   └── mysql/                  # MySQL via Bitnami Helm chart
+│   │   ├── mysql/                  # MySQL via Bitnami Helm chart
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── versions.tf
+│   │   └── kubevirt/               # KubeVirt operator for VM provisioning
 │   │       ├── main.tf
 │   │       ├── variables.tf
 │   │       ├── outputs.tf
@@ -51,6 +56,8 @@ infra/                              # Infrastructure-as-code
     │   │   └── terragrunt.hcl      # Deploys ArgoCD (depends on minikube)
     │   ├── mysql/
     │   │   └── terragrunt.hcl      # Deploys MySQL (depends on minikube)
+    │   ├── kubevirt/
+    │   │   └── terragrunt.hcl      # Deploys KubeVirt (depends on minikube)
     │   └── api/
     │       └── terragrunt.hcl      # Placeholder (ArgoCD-managed)
     ├── staging/
@@ -104,7 +111,7 @@ Modules live under `infra/modules/<provider>/<module-name>`, organized by the pr
 
 | Provider | Purpose | Modules |
 |---|---|---|
-| `local/` | Local development only (Minikube) | `minikube`, `mysql` |
+| `local/` | Local development only (Minikube) | `minikube`, `mysql`, `kubevirt` |
 | `k8s/` | Kubernetes (any environment) | `argocd`, `logs` |
 | `aws/` | AWS cloud | `mysql` (RDS) |
 
@@ -119,6 +126,12 @@ Creates a Minikube cluster using the [`scott-the-programmer/minikube`](https://r
 Deploys MySQL via the Bitnami Helm chart. Used in the `local` environment where MySQL runs inside Minikube instead of a managed cloud service.
 
 **Outputs:** `host`, `port`, `database`
+
+### local/kubevirt
+
+Deploys the [KubeVirt](https://kubevirt.io/) operator for VM provisioning (see [ADR-023](./decisions.md#adr-023-fakeprovider-for-local-e2e-testing)). Creates a `vmis` namespace for VMs, installs the operator and CR, and waits for availability.
+
+**Outputs:** `vmis_namespace`, `kubevirt_version`
 
 ### k8s/argocd
 
@@ -194,6 +207,7 @@ Per-service values overrides in `helm/values/<environment>/` are loaded by ArgoC
 
 - `helm/values/local/api/values.yaml` — API service (port 8080, MySQL connection env vars)
 - `helm/values/local/ui/values.yaml` — UI service (port 5173, API URL env var)
+- `helm/values/local/fakeprovider/values.yaml` — Fakeprovider service (port 8081, KubeVirt VMI management)
 
 ### App-of-Apps Chart
 
@@ -215,11 +229,13 @@ The chart:
 Terragrunt apply
   → Creates Minikube cluster (local/minikube)
   → Deploys MySQL via Helm (local/mysql)
+  → Deploys KubeVirt operator (local/kubevirt)
   → Deploys ArgoCD + app-of-apps (k8s/argocd, environment=local)
 
 App-of-apps creates ArgoCD Applications:
-  → showbiz-api  → showbiz-app chart + helm/values/local/api/values.yaml
-  → showbiz-ui   → showbiz-app chart + helm/values/local/ui/values.yaml
+  → showbiz-api          → showbiz-app chart + helm/values/local/api/values.yaml
+  → showbiz-ui           → showbiz-app chart + helm/values/local/ui/values.yaml
+  → showbiz-fakeprovider → showbiz-app chart + helm/values/local/fakeprovider/values.yaml
 
 ArgoCD syncs each Application automatically
 ```

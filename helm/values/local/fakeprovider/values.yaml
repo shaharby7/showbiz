@@ -1,0 +1,35 @@
+image:
+  repository: showbiz-fakeprovider
+  tag: local
+  pullPolicy: Never
+
+service:
+  port: 80
+  targetPort: 8081
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: fakeprovider.showbiz.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  - name: FAKEPROVIDER_PORT
+    value: "8081"
+  - name: FAKEPROVIDER_NAMESPACE
+    value: vmis
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+serviceAccount:
+  create: true
+  annotations: {}

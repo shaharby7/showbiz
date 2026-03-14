@@ -198,4 +198,13 @@
 
 ---
 
+## ADR-023: FakeProvider for Local E2E Testing
+
+**Status:** Accepted  
+**Context:** The platform needs a real provider implementation to test the full resource lifecycle end-to-end (create, poll, ready, delete). Cloud providers (AWS, GCP) are not available in local development.  
+**Decision:** Implement a "fakeprovider" using KubeVirt on Minikube. A dedicated microservice (`services/fakeprovider`) exposes a CRUD API for virtual machines, backed by KubeVirt VirtualMachineInstance CRDs via `client-go`. The API service implements the `Provider` interface for fakeprovider, which calls the microservice and polls asynchronously (1s intervals) until the machine is Ready. KubeVirt is deployed via a Terraform module (`infra/modules/local/kubevirt`).  
+**Consequences:** Full resource lifecycle can be tested locally without cloud accounts. The fakeprovider serves as a reference implementation for future real providers. KubeVirt requires nested virtualization or a compatible driver on the host.
+
+---
+
 > Add new ADRs below as decisions are made during architecture design.

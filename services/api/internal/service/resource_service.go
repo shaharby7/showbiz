@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/showbiz-io/showbiz/services/api/internal/model"
 	"github.com/showbiz-io/showbiz/services/api/internal/provider"
@@ -82,30 +84,110 @@ func (s *ResourceService) Create(ctx context.Context, projectID string, input Cr
 	// Generate deterministic ID: sbz:<resourceType>:<projectId>:<connectionName>:<resourceName>
 	id := fmt.Sprintf("sbz:%s:%s:%s:%s", input.ResourceType, projectID, conn.Name, input.Name)
 
+	// Call provider to create the resource
+	providerOutput, err := p.CreateResource(ctx, &provider.CreateResourceInput{
+		Type:       input.ResourceType,
+		Name:       input.Name,
+		Properties: input.Values,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("provider create: %w", err)
+	}
+
+	// Merge provider output into values
+	values := input.Values
+	if values == nil {
+		values = make(map[string]interface{})
+	}
+	if providerOutput.Properties != nil {
+		for k, v := range providerOutput.Properties {
+			values[k] = v
+		}
+	}
+
 	res := &model.Resource{
 		ID:           id,
 		Name:         input.Name,
 		ProjectID:    projectID,
 		ConnectionID: input.ConnectionID,
 		ResourceType: input.ResourceType,
-		Values:       input.Values,
-		Status:       "creating",
+		Values:       values,
+		Status:       providerOutput.Status,
 	}
 
 	if err := s.resourceRepo.CreateResource(ctx, res); err != nil {
 		return nil, fmt.Errorf("create resource: %w", err)
 	}
 
-	// No actual provider call yet — immediately set to active
-	if err := s.resourceRepo.UpdateResource(ctx, id, input.Values, "active"); err != nil {
-		return nil, fmt.Errorf("activate resource: %w", err)
+	// If the resource is not yet ready, start async polling
+	if providerOutput.Status != "active" && providerOutput.Status != "running" && providerOutput.Status != "Ready" {
+		providerResourceID := providerOutput.ID
+		s.startAsyncStatusPoller(id, providerResourceID, p)
+	} else {
+		// Resource is immediately ready — set to active
+		if err := s.resourceRepo.UpdateResource(ctx, id, values, "active"); err != nil {
+			return nil, fmt.Errorf("activate resource: %w", err)
+		}
+		res.Status = "active"
 	}
 
-	created, err := s.resourceRepo.GetResourceByID(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("fetch created resource: %w", err)
-	}
-	return created, nil
+	return res, nil
+}
+
+// startAsyncStatusPoller polls the provider every second until the resource reaches Ready status.
+func (s *ResourceService) startAsyncStatusPoller(resourceID, providerResourceID string, p provider.Provider) {
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+
+		timeout := time.After(5 * time.Minute)
+
+		for {
+			select {
+			case <-ticker.C:
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				output, err := p.GetResource(ctx, providerResourceID)
+				cancel()
+
+				if err != nil {
+					slog.Warn("polling provider resource failed", "resourceID", resourceID, "error", err)
+					continue
+				}
+
+				slog.Info("polling resource status", "resourceID", resourceID, "status", output.Status)
+
+				if output.Status == "Ready" || output.Status == "running" {
+					// Resource is ready — update DB with final values and status
+					values := output.Properties
+					if values == nil {
+						values = make(map[string]interface{})
+					}
+					ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
+					if err := s.resourceRepo.UpdateResource(ctx2, resourceID, values, "active"); err != nil {
+						slog.Error("failed to update resource to active", "resourceID", resourceID, "error", err)
+					}
+					cancel2()
+					return
+				}
+
+				if output.Status == "Failed" {
+					ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
+					if err := s.resourceRepo.UpdateResource(ctx2, resourceID, output.Properties, "failed"); err != nil {
+						slog.Error("failed to update resource to failed", "resourceID", resourceID, "error", err)
+					}
+					cancel2()
+					return
+				}
+
+			case <-timeout:
+				slog.Error("resource polling timed out", "resourceID", resourceID)
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				_ = s.resourceRepo.UpdateResource(ctx, resourceID, nil, "failed")
+				cancel()
+				return
+			}
+		}
+	}()
 }
 
 func (s *ResourceService) Get(ctx context.Context, id string) (*model.Resource, error) {
@@ -158,6 +240,18 @@ func (s *ResourceService) Delete(ctx context.Context, id string) error {
 	}
 	if res == nil {
 		return fmt.Errorf("resource not found")
+	}
+
+	// Call provider to delete the resource if it has a provider-side ID
+	conn, err := s.connRepo.GetConnectionByID(ctx, res.ConnectionID)
+	if err == nil && conn != nil {
+		if p, ok := s.registry.Get(conn.Provider); ok {
+			if providerID, ok := res.Values["fakeproviderID"]; ok {
+				if idStr, ok := providerID.(string); ok {
+					_ = p.DeleteResource(ctx, idStr)
+				}
+			}
+		}
 	}
 
 	if err := s.resourceRepo.DeleteResource(ctx, id); err != nil {
