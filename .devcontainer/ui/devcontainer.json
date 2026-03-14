@@ -1,0 +1,20 @@
+{
+  "name": "Showbiz UI",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "ui",
+  "workspaceFolder": "/workspaces/showbiz",
+  "forwardPorts": [5173],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}

@@ -30,7 +30,19 @@ Choose one of the following setups:
 
 #### Option A: Devcontainer (Recommended)
 
-All dependencies are pre-installed. Just open the project in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension, or use GitHub Codespaces.
+All dependencies are pre-installed and services start automatically. Open the project in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+
+When prompted, choose which container to connect to:
+- **Showbiz API** — Go development, connects to MySQL
+- **Showbiz UI** — Vue.js/Node.js development
+
+All three containers (API, UI, MySQL) start together via Docker Compose. The API automatically runs migrations and starts the server. The UI runs Vite with HMR.
+
+| Service | URL | Description |
+|---|---|---|
+| UI | `http://localhost:5173` | Vue.js with hot reload |
+| API | `http://localhost:8080` | Go API server |
+| MySQL | `localhost:13306` | Database (external access) |
 
 #### Option B: Local Setup
 

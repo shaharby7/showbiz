@@ -13,8 +13,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/v1': 'http://localhost:8080',
-      '/health': 'http://localhost:8080',
+      '/v1': process.env.VITE_API_URL || 'http://localhost:8080',
+      '/health': process.env.VITE_API_URL || 'http://localhost:8080',
     },
   },
 })

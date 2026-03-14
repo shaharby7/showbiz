@@ -1,14 +1,49 @@
 services:
-  devcontainer:
+  api:
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     volumes:
       - ..:/workspaces/showbiz:cached
-    command: sleep infinity
+    ports:
+      - "8080:8080"
+    environment:
+      SHOWBIZ_DB_HOST: mysql
+      SHOWBIZ_DB_PORT: "3306"
+      SHOWBIZ_DB_USER: showbiz
+      SHOWBIZ_DB_PASSWORD: showbiz_dev
+      SHOWBIZ_DB_NAME: showbiz
+      SHOWBIZ_JWT_SECRET: dev-secret-do-not-use-in-production
+      SHOWBIZ_API_PORT: "8080"
     depends_on:
       mysql:
         condition: service_healthy
+    command: >
+      bash -c "
+        cd /workspaces/showbiz/services/api &&
+        go mod download &&
+        go run ./cmd/migrate up &&
+        go run ./cmd/showbiz-api
+      "
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces/showbiz:cached
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://api:8080
+    depends_on:
+      - api
+    command: >
+      bash -c "
+        cd /workspaces/showbiz/ui &&
+        npm install &&
+        npm run dev -- --host 0.0.0.0
+      "
 
   mysql:
     image: mysql:8.0

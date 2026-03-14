@@ -1,0 +1,19 @@
+{
+  "name": "Showbiz API",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "api",
+  "workspaceFolder": "/workspaces/showbiz",
+  "forwardPorts": [8080, 13306],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ],
+      "settings": {
+        "go.lintTool": "golangci-lint",
+        "go.lintOnSave": "workspace",
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
