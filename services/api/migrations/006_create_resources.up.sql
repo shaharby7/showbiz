@@ -4,7 +4,7 @@ CREATE TABLE resources (
     project_id     VARCHAR(64)  NOT NULL,
     connection_id  VARCHAR(64)  NOT NULL,
     resource_type  VARCHAR(64)  NOT NULL,
-    `values`       JSON         NOT NULL,
+    values_json    JSON         NOT NULL,
     status         VARCHAR(32)  NOT NULL DEFAULT 'creating',
     created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
