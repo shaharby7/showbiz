@@ -1,0 +1,29 @@
+image:
+  repository: showbiz-ui
+  tag: local
+  pullPolicy: Never
+
+service:
+  port: 80
+  targetPort: 5173
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: showbiz.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  - name: VITE_API_URL
+    value: http://api.showbiz.local
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
