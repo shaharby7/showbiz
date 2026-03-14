@@ -86,6 +86,9 @@ A browser-based dashboard for managing organizations, projects, connections, res
 ### 7. Provider Abstraction Layer
 A pluggable interface within the API that normalizes resource operations (create/update/delete machines, networks) across cloud providers. Each provider implements a common interface. See [provider-abstraction.md](./provider-abstraction.md).
 
+### 8. FakeProvider Service (Go)
+A standalone microservice (`services/fakeprovider`) that manages virtual machines on KubeVirt. Used as the local development provider — implements the same resource lifecycle as a real cloud provider (async creation, status polling, IP assignment) but runs entirely on Minikube. The API service integrates with it via the `fakeprovider` provider implementation. See [provider-abstraction.md](./provider-abstraction.md#fakeprovider).
+
 ## Key Principles
 
 - **Provider-agnostic core** — Cloud-specific logic lives only behind the provider interface

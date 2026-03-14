@@ -341,6 +341,16 @@ List endpoints use cursor-based pagination:
 - ✅ **Immutable names and IDs** — all entity names and IDs are immutable once created
 - ✅ **Resource schema** — typed with `connectionId`, `resourceType`, and `values`
 - ✅ **Initial resource types** — `machine` and `network`
+- ✅ **Async resource creation** — creating a resource calls the provider, which may be asynchronous. The resource is returned immediately with its initial status (e.g., `Initialized`). The API polls the provider in the background (1-second intervals) until the resource reaches `active` or `failed` status.
+
+## Registered Providers
+
+| Provider | Resource Types | Backend | Environment |
+|---|---|---|---|
+| `stub` | `machine`, `network` | In-memory mock | All (testing) |
+| `fakeprovider` | `machine` | KubeVirt VMIs via `services/fakeprovider` | Local (Minikube) |
+
+See [provider-abstraction.md](./provider-abstraction.md) for full provider documentation.
 
 ## Open Questions
 

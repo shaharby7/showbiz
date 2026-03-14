@@ -88,9 +88,100 @@ Providers are compiled-in and registered at startup:
 
 ```go
 registry := providers.NewRegistry()
-registry.Register("aws", aws.NewProvider)
-registry.Register("gcp", gcp.NewProvider)
+registry.Register("stub", provider.NewStubProvider())
+registry.Register("fakeprovider", provider.NewFakeProvider(cfg.FakeProviderURL))
+// Future: registry.Register("aws", aws.NewProvider())
 ```
+
+---
+
+## Implemented Providers
+
+### stub
+
+A mock provider for unit testing and development. All operations succeed immediately with hardcoded responses. Supports `machine` and `network` resource types. No real infrastructure is provisioned.
+
+### fakeprovider
+
+A local development provider backed by [KubeVirt](https://kubevirt.io/) — a Kubernetes operator for running virtual machines. Used for end-to-end testing of the full resource lifecycle without requiring cloud accounts. See [ADR-023](./decisions.md#adr-023-fakeprovider-for-local-e2e-testing).
+
+**Architecture:**
+
+```
+┌──────────────┐      HTTP       ┌────────────────────┐     client-go     ┌──────────────┐
+│  Showbiz API │ ──────────────► │  FakeProvider Svc  │ ────────────────► │   KubeVirt   │
+│  (provider)  │                 │  (services/        │                   │   (VMIs on   │
+│              │ ◄────────────── │   fakeprovider)    │ ◄──────────────── │   Minikube)  │
+└──────────────┘   JSON response └────────────────────┘    watch/poll     └──────────────┘
+```
+
+**Resource types:** `machine`
+
+**How it works:**
+
+1. The API service's `FakeProvider` implements the `Provider` interface
+2. On `CreateResource`, it calls the fakeprovider microservice via HTTP `POST /v1/machines`
+3. The fakeprovider service creates a KubeVirt `VirtualMachineInstance` CR via `client-go`
+4. Creation is **asynchronous** — the API immediately receives status `Initialized`
+5. The API's resource service spawns a background poller (1-second intervals) that calls `GetResource` on the provider
+6. Once the VM reaches `Running` phase and has an IP, status transitions to `Ready` → the API updates the resource to `active`
+7. On `DeleteResource`, the provider calls `DELETE /v1/machines/{id}` which removes the VMI
+
+**FakeProvider connection schema:**
+
+```json
+{
+  "name": "local-kubevirt",
+  "provider": "fakeprovider",
+  "credentials": {},
+  "config": {}
+}
+```
+
+No credentials are required — the fakeprovider service runs in the same cluster and accesses KubeVirt directly.
+
+**Machine resource values:**
+
+```json
+{
+  "name": "my-vm",
+  "connectionId": "conn_id",
+  "resourceType": "machine",
+  "values": {
+    "cpu": 2,
+    "memoryMB": 1024,
+    "image": "quay.io/kubevirt/cirros-container-disk-demo",
+    "namespace": "vmis"
+  }
+}
+```
+
+**Resource lifecycle:**
+
+| Status | Meaning |
+|---|---|
+| `Initialized` | Create request sent to fakeprovider, VMI not yet created |
+| `Provisioning` | VMI created on KubeVirt, waiting for IP assignment |
+| `active` | VM is running, IP available in resource values |
+| `failed` | VMI failed to start or timed out (5 min) |
+
+**FakeProvider microservice** (`services/fakeprovider/`):
+
+| Endpoint | Description |
+|---|---|
+| `POST /v1/machines` | Create machine (async — returns Initialized) |
+| `GET /v1/machines` | List all machines |
+| `GET /v1/machines/{id}` | Get machine (includes IP when Ready) |
+| `PUT /v1/machines/{id}` | Update machine properties |
+| `DELETE /v1/machines/{id}` | Delete machine and VMI |
+
+The microservice uses an in-memory store (no database) and `k8s.io/client-go` dynamic client for KubeVirt interactions.
+
+**Infrastructure requirements:**
+
+- KubeVirt operator deployed on the cluster (`infra/modules/local/kubevirt`)
+- A `vmis` namespace for VM instances
+- The fakeprovider service must have RBAC permissions to create/get/delete VMIs
 
 ## Provider Lifecycle
 

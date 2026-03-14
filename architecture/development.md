@@ -41,7 +41,16 @@ showbiz/
 │       ├── migrations/            # SQL migration files
 │       ├── go.mod
 │       └── Makefile
-│   # Future microservices: services/scheduler/, services/worker/, etc.
+│   └── fakeprovider/              # FakeProvider — KubeVirt VM management
+│       ├── cmd/
+│       │   └── fakeprovider/
+│       │       └── main.go
+│       ├── internal/
+│       │   ├── handler/           # HTTP handlers
+│       │   ├── model/             # Machine model
+│       │   ├── service/           # Business logic + async provisioning
+│       │   └── kubevirt/          # KubeVirt client (client-go dynamic)
+│       └── go.mod
 │
 ├── sdk/
 │   ├── go/                        # Go SDK
