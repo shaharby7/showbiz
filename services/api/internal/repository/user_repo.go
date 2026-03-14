@@ -19,8 +19,12 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 func (r *UserRepo) CreateUser(ctx context.Context, user *model.User) error {
 	query := `INSERT INTO users (email, password_hash, organization_id, display_name, email_verified, active, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`
+	var orgID interface{}
+	if user.OrganizationID != "" {
+		orgID = user.OrganizationID
+	}
 	_, err := r.db.ExecContext(ctx, query,
-		user.Email, user.PasswordHash, user.OrganizationID, user.DisplayName, user.EmailVerified, user.Active,
+		user.Email, user.PasswordHash, orgID, user.DisplayName, user.EmailVerified, user.Active,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
@@ -29,7 +33,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, user *model.User) error {
 }
 
 func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
-	query := `SELECT email, password_hash, organization_id, display_name, email_verified, active, created_at, updated_at
+	query := `SELECT email, password_hash, COALESCE(organization_id, ''), display_name, email_verified, active, created_at, updated_at
 		FROM users WHERE email = ?`
 	user := &model.User{}
 	err := r.db.QueryRowContext(ctx, query, email).Scan(

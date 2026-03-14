@@ -1,7 +1,7 @@
 CREATE TABLE users (
     email           VARCHAR(256) PRIMARY KEY,
     password_hash   VARCHAR(256) NOT NULL,
-    organization_id VARCHAR(64)  NOT NULL,
+    organization_id VARCHAR(64),
     display_name    VARCHAR(256) NOT NULL,
     email_verified  BOOLEAN      NOT NULL DEFAULT FALSE,
     active          BOOLEAN      NOT NULL DEFAULT TRUE,

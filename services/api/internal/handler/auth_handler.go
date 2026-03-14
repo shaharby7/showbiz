@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/showbiz-io/showbiz/services/api/internal/middleware"
@@ -33,6 +34,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			Error(w, http.StatusConflict, "EMAIL_EXISTS", "Email is already registered")
 			return
 		}
+		slog.Error("register failed", "error", err)
 		Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to register user")
 		return
 	}
