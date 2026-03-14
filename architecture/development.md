@@ -178,8 +178,10 @@ showbiz/
 │   │       ├── values.yaml
 │   │       └── templates/
 │   └── local/                     # Local helm values deployed by ArgoCD
-│       └── api/
-│           └── values.yaml        # Values override for the API service
+│       ├── api/
+│       │   └── values.yaml        # Values override for the API service
+│       └── ui/
+│           └── values.yaml        # Values override for the UI service
 │
 ├── examples/                      # Example projects deployed using Showbiz
 │   └── README.md                  # Placeholder — examples coming soon
