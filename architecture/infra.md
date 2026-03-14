@@ -45,10 +45,14 @@ infra/                              # Infrastructure-as-code
     ├── terragrunt.hcl              # Root config (provider, backend, common vars)
     ├── local/                      # Local development on Minikube
     │   ├── terragrunt.hcl          # Local environment config
-    │   ├── api/
-    │   │   └── terragrunt.hcl
-    │   └── mysql/
-    │       └── terragrunt.hcl
+    │   ├── minikube/
+    │   │   └── terragrunt.hcl      # Creates Minikube cluster
+    │   ├── argocd/
+    │   │   └── terragrunt.hcl      # Deploys ArgoCD (depends on minikube)
+    │   ├── mysql/
+    │   │   └── terragrunt.hcl      # Deploys MySQL (depends on minikube)
+    │   └── api/
+    │       └── terragrunt.hcl      # Placeholder (ArgoCD-managed)
     ├── staging/
     │   └── terragrunt.hcl
     └── production/
