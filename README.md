@@ -77,12 +77,19 @@ The default values in `.env.example` match the devcontainer MySQL setup:
 | `SHOWBIZ_JWT_SECRET` | `dev-secret-do-not-use-in-production` | JWT signing key |
 | `SHOWBIZ_API_PORT` | `8080` | API server port |
 
-#### 3. Install Go dependencies
+#### 3. Install dependencies
 
 ```bash
+# Go API
 cd services/api
 go mod download
+
+# UI
+cd ../../ui
+npm install
 ```
+
+> **Devcontainer note:** Both are installed automatically via `postCreateCommand`.
 
 #### 4. Run database migrations
 
@@ -103,13 +110,27 @@ To rollback the last migration:
 go run ./cmd/migrate down
 ```
 
-#### 5. Start the API server
+#### 5. Start the services
+
+You need two terminals — one for the API and one for the UI:
+
+**Terminal 1 — API server:**
 
 ```bash
+cd services/api
 go run ./cmd/showbiz-api
 ```
 
 The API is now running at `http://localhost:8080`.
+
+**Terminal 2 — UI dev server:**
+
+```bash
+cd ui
+npm run dev
+```
+
+The UI is now running at `http://localhost:5173` with hot module replacement (HMR). The Vite dev server proxies API requests (`/v1/*`) to the API server at port 8080.
 
 ### Verify it works
 

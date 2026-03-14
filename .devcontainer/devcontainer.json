@@ -17,7 +17,7 @@
     "SHOWBIZ_JWT_SECRET": "dev-secret-do-not-use-in-production",
     "SHOWBIZ_API_PORT": "8080"
   },
-  "postCreateCommand": "cd services/api && go mod download",
+  "postCreateCommand": "cd services/api && go mod download && cd ../../ui && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
