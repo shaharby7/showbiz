@@ -1,0 +1,11 @@
+export { ShowbizClient } from "./client.js";
+export type { ClientOptions } from "./client.js";
+export { ShowbizError, isNotFound, isConflict, isUnauthorized } from "./errors.js";
+export * from "./types.js";
+export { AuthResource } from "./resources/auth.js";
+export { OrganizationsResource } from "./resources/organizations.js";
+export { ProjectsResource } from "./resources/projects.js";
+export { ConnectionsResource } from "./resources/connections.js";
+export { ResourcesResource } from "./resources/resources.js";
+export { IAMResource } from "./resources/iam.js";
+export { ProvidersResource } from "./resources/providers.js";
