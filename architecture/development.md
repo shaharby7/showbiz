@@ -4,7 +4,7 @@
 
 ## Overview
 
-Showbiz is developed as a **monorepo** with all components in a single repository. CI/CD uses **GitHub Actions**. Local development uses a **devcontainer** (VS Code / GitHub Codespaces).
+Showbiz is developed as a **monorepo** with all components in a single repository. CI/CD uses **GitHub Actions**. Local development uses a **devcontainer** (VS Code / GitHub Codespaces). Infrastructure is documented separately in [infra.md](./infra.md).
 
 ---
 
@@ -24,17 +24,6 @@ showbiz/
 │       └── release-patch.yml      # Patch release (single component)
 │
 ├── architecture/                  # Architecture docs (this directory)
-│   ├── README.md
-│   ├── overview.md
-│   ├── api.md
-│   ├── sdk.md
-│   ├── cli.md
-│   ├── terraform.md
-│   ├── ui.md
-│   ├── provider-abstraction.md
-│   ├── database.md
-│   ├── development.md             # This file
-│   └── decisions.md
 │
 ├── services/                      # Backend microservices
 │   └── api/                       # Core API — main entry point for clients
@@ -49,166 +38,28 @@ showbiz/
 │       │   ├── repository/        # MySQL data access
 │       │   ├── service/           # Business logic
 │       │   └── provider/          # Provider abstraction layer
-│       │       ├── registry.go
-│       │       └── interface.go
 │       ├── migrations/            # SQL migration files
-│       │   ├── 001_create_organizations.sql
-│       │   ├── 002_create_users.sql
-│       │   └── ...
 │       ├── go.mod
-│       ├── go.sum
 │       └── Makefile
-│   # Future microservices will be added here as siblings to api/
-│   # e.g., services/scheduler/, services/worker/, etc.
+│   # Future microservices: services/scheduler/, services/worker/, etc.
 │
 ├── sdk/
 │   ├── go/                        # Go SDK
-│   │   ├── client.go
-│   │   ├── auth.go
-│   │   ├── organizations.go
-│   │   ├── users.go
-│   │   ├── projects.go
-│   │   ├── connections.go
-│   │   ├── resources.go
-│   │   ├── iam.go
-│   │   ├── providers.go
-│   │   ├── errors.go
-│   │   ├── types.go
-│   │   ├── go.mod
-│   │   └── go.sum
-│   │
 │   └── typescript/                # TypeScript SDK
-│       ├── src/
-│       │   ├── client.ts
-│       │   ├── resources/
-│       │   │   ├── auth.ts
-│       │   │   ├── organizations.ts
-│       │   │   ├── users.ts
-│       │   │   ├── projects.ts
-│       │   │   ├── connections.ts
-│       │   │   ├── resources.ts
-│       │   │   ├── iam.ts
-│       │   │   └── providers.ts
-│       │   ├── errors.ts
-│       │   └── types.ts
-│       ├── package.json
-│       └── tsconfig.json
 │
-├── cli/                           # CLI tool (Go)
-│   ├── cmd/
-│   │   └── showbiz/
-│   │       └── main.go
-│   ├── internal/
-│   │   ├── commands/              # Command implementations
-│   │   ├── config/                # Config file handling
-│   │   └── output/                # Formatting, colors, JSON mode
-│   ├── go.mod
-│   └── go.sum
+├── cli/                           # CLI tool (Go, Cobra)
 │
 ├── terraform/                     # Terraform provider (Go)
-│   ├── internal/
-│   │   └── provider/
-│   │       ├── provider.go
-│   │       ├── resource_project.go
-│   │       ├── resource_connection.go
-│   │       ├── resource_resource.go
-│   │       ├── resource_iam_policy.go
-│   │       ├── resource_policy_attachment.go
-│   │       └── datasources/
-│   ├── go.mod
-│   └── go.sum
 │
 ├── ui/                            # Web UI (Vue.js + Vite)
-│   ├── src/
-│   │   ├── App.vue
-│   │   ├── main.ts
-│   │   ├── router/
-│   │   ├── views/
-│   │   ├── components/
-│   │   ├── composables/
-│   │   └── stores/                # Pinia stores
-│   ├── public/
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── tailwind.config.ts
-│   ├── tsconfig.json
-│   └── package.json
 │
-├── e2e/                           # End-to-end tests (independent component)
-│   ├── tests/
-│   │   ├── api/                   # API E2E tests (via Go SDK or HTTP)
-│   │   ├── sdk-go/                # Go SDK E2E scenarios
-│   │   ├── sdk-ts/                # TypeScript SDK E2E scenarios
-│   │   ├── cli/                   # CLI E2E tests
-│   │   ├── terraform/             # Terraform provider E2E tests
-│   │   └── ui/                    # UI E2E tests (Playwright)
-│   ├── fixtures/                  # Shared test data, seed scripts
-│   ├── helpers/                   # Shared test utilities
-│   ├── playwright.config.ts       # Playwright config (for UI tests)
-│   ├── package.json               # Node.js deps (Playwright, test runner)
-│   ├── go.mod                     # Go deps (for Go-based E2E tests)
-│   └── README.md                  # How to run E2E tests
+├── e2e/                           # End-to-end tests
 │
-├── infra/                        # Infrastructure-as-code
-│   ├── modules/                  # Terraform modules
-│   │   ├── api/                  # API service infra (K8s deployment, service, ingress)
-│   │   ├── local/                # Local development modules
-│   │   │   ├── minikube/         # Creates Minikube cluster (scott-the-programmer/minikube provider)
-│   │   │   │   ├── main.tf
-│   │   │   │   ├── variables.tf
-│   │   │   │   ├── outputs.tf
-│   │   │   │   └── versions.tf
-│   │   │   └── mysql/            # MySQL via Bitnami Helm chart (local dev)
-│   │   │       ├── main.tf
-│   │   │       ├── variables.tf
-│   │   │       ├── outputs.tf
-│   │   │       └── versions.tf
-│   │   ├── k8s/                  # Kubernetes-related modules (any environment)
-│   │   │   ├── argocd/           # Deploys ArgoCD Helm chart
-│   │   │   │   ├── main.tf
-│   │   │   │   ├── variables.tf
-│   │   │   │   ├── outputs.tf
-│   │   │   │   └── versions.tf
-│   │   │   └── logs/             # Prometheus + Grafana (kube-prometheus-stack)
-│   │   │       ├── main.tf
-│   │   │       ├── variables.tf
-│   │   │       ├── outputs.tf
-│   │   │       └── versions.tf
-│   │   └── aws/                  # AWS-specific modules
-│   │       └── mysql/            # RDS MySQL instance
-│   │           ├── main.tf
-│   │           ├── variables.tf
-│   │           ├── outputs.tf
-│   │           └── versions.tf
-│   └── env/                      # Terragrunt HCL files per environment
-│       ├── terragrunt.hcl        # Root config (provider, backend, common vars)
-│       ├── local/                # Local development on Minikube
-│       │   ├── terragrunt.hcl    # Local environment config
-│       │   ├── api/
-│       │   │   └── terragrunt.hcl
-│       │   └── mysql/
-│       │       └── terragrunt.hcl
-│       ├── staging/
-│       │   └── terragrunt.hcl
-│       └── production/
-│           └── terragrunt.hcl
+├── infra/                         # Infrastructure-as-code (see infra.md)
+├── helm/                          # Helm charts and values (see infra.md)
 │
-├── helm/                          # Helm charts and values
-│   ├── charts/                    # Charts dedicated to Showbiz
-│   │   └── showbiz-app/           # Generic chart for deploying Showbiz services (e.g., api)
-│   │       ├── Chart.yaml
-│   │       ├── values.yaml
-│   │       └── templates/
-│   └── local/                     # Local helm values deployed by ArgoCD
-│       ├── api/
-│       │   └── values.yaml        # Values override for the API service
-│       └── ui/
-│           └── values.yaml        # Values override for the UI service
-│
-├── examples/                      # Example projects deployed using Showbiz
-│   └── README.md                  # Placeholder — examples coming soon
-│
-├── VERSION                        # Current major.minor version (e.g., "1.0")
+├── examples/                      # Example projects
+├── VERSION                        # Current major.minor version
 └── README.md
 ```
 

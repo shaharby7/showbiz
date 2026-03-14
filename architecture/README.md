@@ -14,6 +14,7 @@ Showbiz is a platform that allows developers to deploy projects to different clo
 | [ui.md](./ui.md) | Web UI design |
 | [provider-abstraction.md](./provider-abstraction.md) | Cloud provider abstraction layer |
 | [development.md](./development.md) | Development workflow, CI/CD, versioning, local setup |
+| [infra.md](./infra.md) | Infrastructure-as-code: Terraform modules, Terragrunt, Helm |
 | [database.md](./database.md) | MySQL schema and table definitions |
 | [decisions.md](./decisions.md) | Architecture Decision Records (ADRs) |
 
