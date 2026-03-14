@@ -171,4 +171,22 @@
 
 ---
 
+## ADR-020: Terraform Module File Conventions
+
+**Status:** Accepted  
+**Context:** Terraform modules had all code (variables, outputs, resources, provider config) in a single `main.tf`, making modules hard to navigate as they grow.  
+**Decision:** Every Terraform module must have separate files: `main.tf` (resources only), `variables.tf` (input variables), `outputs.tf` (output values), `versions.tf` (required providers and Terraform version), and `provider.tf` (provider configuration).  
+**Consequences:** Consistent, predictable module structure across all modules. Easier code review and navigation.
+
+---
+
+## ADR-021: Minikube Terraform Provider
+
+**Status:** Accepted  
+**Context:** The Minikube module used `null_resource` with `local-exec` provisioners to run `minikube start/delete`. This is fragile — no state tracking, no plan/apply lifecycle, and the destroy provisioner hard-codes the profile name.  
+**Decision:** Use the `scott-the-programmer/minikube` Terraform provider (`minikube_cluster` resource) which provides a proper Terraform lifecycle for Minikube clusters, including plan, apply, and destroy with full state management.  
+**Consequences:** Minikube cluster is a first-class Terraform resource with proper state. Cluster attributes (certificates, host) are available as outputs for downstream modules.
+
+---
+
 > Add new ADRs below as decisions are made during architecture design.
