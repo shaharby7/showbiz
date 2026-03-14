@@ -166,8 +166,8 @@
 
 **Status:** Accepted  
 **Context:** Need a clear separation between reusable Terraform modules, per-environment deployment configuration, and Helm charts.  
-**Decision:** `infra/modules/` contains Terraform modules (api, mysql, cdn, networking, k8s/). `infra/modules/k8s/minikube` creates a Minikube cluster for local dev, `infra/modules/k8s/argocd` deploys the ArgoCD helm chart. `infra/env/` contains Terragrunt HCL files per environment (local, staging, production). `helm/charts/` holds Showbiz-specific charts (`showbiz-app` is a generic chart reusable across services). `helm/local/` contains per-service values overrides deployed by ArgoCD in the local environment.  
-**Consequences:** Terragrunt provides DRY configuration across environments. Local dev mirrors production topology via Minikube + ArgoCD. Helm charts are decoupled from Terraform, enabling ArgoCD-driven GitOps deployments.
+**Decision:** `infra/modules/<provider>/<module-name>` organizes modules by provider: `local/` for local-dev-only modules (minikube, mysql via Helm), `k8s/` for Kubernetes modules usable in any env (argocd, logs), `aws/` for AWS-specific modules (RDS). `infra/env/` contains Terragrunt HCL files per environment (local, staging, production). `helm/charts/` holds Showbiz-specific charts (`showbiz-app` is a generic chart reusable across services). `helm/local/` contains per-service values overrides deployed by ArgoCD in the local environment.  
+**Consequences:** Terragrunt provides DRY configuration across environments. Module paths clearly indicate which provider/context they belong to. Local dev mirrors production topology via Minikube + ArgoCD.
 
 ---
 

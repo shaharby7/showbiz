@@ -152,27 +152,34 @@ showbiz/
 ├── infra/                        # Infrastructure-as-code
 │   ├── modules/                  # Terraform modules
 │   │   ├── api/                  # API service infra (K8s deployment, service, ingress)
-│   │   ├── mysql/                # MySQL database (Bitnami Helm chart)
-│   │   │   ├── main.tf           # helm_release resource
-│   │   │   ├── variables.tf      # Input variables
-│   │   │   ├── outputs.tf        # Output values
-│   │   │   ├── versions.tf       # Required providers
-│   │   │   └── provider.tf       # Provider config
-│   │   ├── cdn/                  # CDN for UI static assets
-│   │   ├── networking/           # VPC, subnets, load balancers
-│   │   └── k8s/                  # Kubernetes-related modules
-│   │       ├── minikube/         # Creates Minikube cluster (scott-the-programmer/minikube provider)
-│   │       │   ├── main.tf       # minikube_cluster resource
-│   │       │   ├── variables.tf  # Input variables
-│   │       │   ├── outputs.tf    # Output values (host, certs)
-│   │       │   ├── versions.tf   # Required providers
-│   │       │   └── provider.tf   # Provider config
-│   │       └── argocd/           # Deploys ArgoCD helm chart
-│   │           ├── main.tf       # helm_release resource
-│   │           ├── variables.tf  # Input variables
-│   │           ├── outputs.tf    # Output values
-│   │           ├── versions.tf   # Required providers
-│   │           └── provider.tf   # Provider config
+│   │   ├── local/                # Local development modules
+│   │   │   ├── minikube/         # Creates Minikube cluster (scott-the-programmer/minikube provider)
+│   │   │   │   ├── main.tf
+│   │   │   │   ├── variables.tf
+│   │   │   │   ├── outputs.tf
+│   │   │   │   └── versions.tf
+│   │   │   └── mysql/            # MySQL via Bitnami Helm chart (local dev)
+│   │   │       ├── main.tf
+│   │   │       ├── variables.tf
+│   │   │       ├── outputs.tf
+│   │   │       └── versions.tf
+│   │   ├── k8s/                  # Kubernetes-related modules (any environment)
+│   │   │   ├── argocd/           # Deploys ArgoCD Helm chart
+│   │   │   │   ├── main.tf
+│   │   │   │   ├── variables.tf
+│   │   │   │   ├── outputs.tf
+│   │   │   │   └── versions.tf
+│   │   │   └── logs/             # Prometheus + Grafana (kube-prometheus-stack)
+│   │   │       ├── main.tf
+│   │   │       ├── variables.tf
+│   │   │       ├── outputs.tf
+│   │   │       └── versions.tf
+│   │   └── aws/                  # AWS-specific modules
+│   │       └── mysql/            # RDS MySQL instance
+│   │           ├── main.tf
+│   │           ├── variables.tf
+│   │           ├── outputs.tf
+│   │           └── versions.tf
 │   └── env/                      # Terragrunt HCL files per environment
 │       ├── terragrunt.hcl        # Root config (provider, backend, common vars)
 │       ├── local/                # Local development on Minikube

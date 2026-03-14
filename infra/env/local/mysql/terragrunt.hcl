@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_repo_root()}/infra/modules/mysql"
+  source = "${get_repo_root()}/infra/modules/local/mysql"
 }
 
 inputs = {
