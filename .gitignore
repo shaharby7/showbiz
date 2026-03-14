@@ -1,0 +1,73 @@
+# ==========================
+# OS / Editor
+# ==========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ==========================
+# Go
+# ==========================
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# ==========================
+# Node.js / TypeScript
+# ==========================
+node_modules/
+dist/
+*.tsbuildinfo
+.npm
+.yarn/
+
+# ==========================
+# Vite / Vue UI
+# ==========================
+ui/dist/
+
+# ==========================
+# Environment / Secrets
+# ==========================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ==========================
+# Terraform
+# ==========================
+infrastructure/**/.terraform/
+infrastructure/**/*.tfstate
+infrastructure/**/*.tfstate.*
+infrastructure/**/*.tfvars
+!infrastructure/**/*.tfvars.example
+infrastructure/**/.terragrunt-cache/
+
+# ==========================
+# Build artifacts
+# ==========================
+bin/
+build/
+tmp/
+
+# ==========================
+# Test / Coverage
+# ==========================
+coverage/
+*.cover
+*.coverprofile
+e2e/test-results/
+e2e/playwright-report/
