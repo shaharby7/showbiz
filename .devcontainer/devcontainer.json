@@ -3,9 +3,6 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/showbiz",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
   "features": {},
   "forwardPorts": [8080, 13306, 5173],
   "containerEnv": {
