@@ -189,4 +189,13 @@
 
 ---
 
+## ADR-022: ArgoCD App-of-Apps Pattern
+
+**Status:** Accepted  
+**Context:** ArgoCD needs to know which applications to deploy in each environment. Manually creating ArgoCD Application CRs is error-prone and doesn't scale across environments.  
+**Decision:** Use the app-of-apps pattern: a dedicated Helm chart (`helm/charts/app-of-apps`) generates ArgoCD `Application` CRs for each service. The `k8s/argocd` Terraform module deploys both ArgoCD and the app-of-apps chart, passing the environment name so the chart loads values from `helm/values/<environment>/<service>/values.yaml`.  
+**Consequences:** Adding a new service or environment only requires adding a values file and an entry in the app-of-apps chart. The Terraform module is the single entry point for bootstrapping the entire deployment pipeline.
+
+---
+
 > Add new ADRs below as decisions are made during architecture design.

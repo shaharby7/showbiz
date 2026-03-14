@@ -60,6 +60,11 @@ infra/                              # Infrastructure-as-code
 
 helm/                               # Helm charts and values
 ├── charts/                         # Charts dedicated to Showbiz
+│   ├── app-of-apps/                # ArgoCD app-of-apps bootstrap chart
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml
+│   │   └── templates/
+│   │       └── applications.yaml   # Generates ArgoCD Application CRs
 │   └── showbiz-app/                # Generic chart for deploying Showbiz services
 │       ├── Chart.yaml
 │       ├── values.yaml
@@ -70,11 +75,12 @@ helm/                               # Helm charts and values
 │           ├── ingress.yaml
 │           ├── configmap.yaml
 │           └── serviceaccount.yaml
-└── local/                          # Local helm values deployed by ArgoCD
-    ├── api/
-    │   └── values.yaml             # Values override for the API service
-    └── ui/
-        └── values.yaml             # Values override for the UI service
+└── values/                         # Per-environment values (loaded by app-of-apps)
+    └── local/
+        ├── api/
+        │   └── values.yaml         # Values override for the API service
+        └── ui/
+            └── values.yaml         # Values override for the UI service
 ```
 
 ---
@@ -116,9 +122,10 @@ Deploys MySQL via the Bitnami Helm chart. Used in the `local` environment where 
 
 ### k8s/argocd
 
-Deploys ArgoCD via the official Argo Helm chart. Provides GitOps-driven deployments for all Showbiz services.
+Deploys ArgoCD via the official Argo Helm chart, then deploys the **app-of-apps** chart which bootstraps all Showbiz applications for the given environment. The `environment` variable is passed through so the app-of-apps chart loads the correct values from `helm/values/<environment>/`.
 
-**Outputs:** `namespace`, `release_name`
+**Inputs:** `environment`, `repo_url`, `target_revision`, `app_of_apps_chart_path`  
+**Outputs:** `namespace`, `release_name`, `app_of_apps_release_name`
 
 ### k8s/logs
 
@@ -183,10 +190,20 @@ Key template features:
 
 ### Local Values
 
-Per-service values overrides in `helm/local/` are deployed by ArgoCD in the local Minikube environment:
+Per-service values overrides in `helm/values/<environment>/` are loaded by ArgoCD via the app-of-apps pattern:
 
-- `helm/local/api/values.yaml` — API service (port 8080, MySQL connection env vars)
-- `helm/local/ui/values.yaml` — UI service (port 5173, API URL env var)
+- `helm/values/local/api/values.yaml` — API service (port 8080, MySQL connection env vars)
+- `helm/values/local/ui/values.yaml` — UI service (port 5173, API URL env var)
+
+### App-of-Apps Chart
+
+Implements the [ArgoCD app-of-apps pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/). Deployed by the `k8s/argocd` Terraform module after ArgoCD itself is running.
+
+The chart:
+1. Receives the `environment` name (e.g., `local`, `staging`)
+2. Generates an ArgoCD `Application` CR for each enabled service (api, ui, etc.)
+3. Each Application points to the `showbiz-app` chart with the corresponding values file from `helm/values/<environment>/<service>/values.yaml`
+4. ArgoCD syncs these Applications automatically (auto-prune, self-heal)
 
 ---
 
@@ -198,11 +215,13 @@ Per-service values overrides in `helm/local/` are deployed by ArgoCD in the loca
 Terragrunt apply
   → Creates Minikube cluster (local/minikube)
   → Deploys MySQL via Helm (local/mysql)
-  → Deploys ArgoCD via Helm (k8s/argocd)
+  → Deploys ArgoCD + app-of-apps (k8s/argocd, environment=local)
 
-ArgoCD watches helm/local/
-  → Deploys API using showbiz-app chart + helm/local/api/values.yaml
-  → Deploys UI using showbiz-app chart + helm/local/ui/values.yaml
+App-of-apps creates ArgoCD Applications:
+  → showbiz-api  → showbiz-app chart + helm/values/local/api/values.yaml
+  → showbiz-ui   → showbiz-app chart + helm/values/local/ui/values.yaml
+
+ArgoCD syncs each Application automatically
 ```
 
 ### Cloud (staging/production)
@@ -210,9 +229,10 @@ ArgoCD watches helm/local/
 ```
 Terragrunt apply
   → Creates RDS MySQL (aws/mysql)
-  → Deploys ArgoCD (k8s/argocd)
+  → Deploys ArgoCD + app-of-apps (k8s/argocd, environment=staging)
   → Deploys monitoring (k8s/logs)
 
-ArgoCD watches helm/<env>/
-  → Deploys services using showbiz-app chart + per-env values
+App-of-apps creates ArgoCD Applications:
+  → showbiz-api  → showbiz-app chart + helm/values/staging/api/values.yaml
+  → showbiz-ui   → showbiz-app chart + helm/values/staging/ui/values.yaml
 ```

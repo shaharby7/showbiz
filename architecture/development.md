@@ -57,6 +57,11 @@ showbiz/
 │
 ├── infra/                         # Infrastructure-as-code (see infra.md)
 ├── helm/                          # Helm charts and values (see infra.md)
+│   ├── charts/
+│   │   ├── app-of-apps/           # ArgoCD app-of-apps bootstrap chart
+│   │   └── showbiz-app/           # Generic chart for Showbiz services
+│   └── values/                    # Per-environment values
+│       └── local/                 # Local env values (api/, ui/)
 │
 ├── examples/                      # Example projects
 ├── VERSION                        # Current major.minor version

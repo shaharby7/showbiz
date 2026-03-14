@@ -4,6 +4,11 @@ output "namespace" {
 }
 
 output "release_name" {
-  description = "Helm release name"
+  description = "ArgoCD Helm release name"
   value       = helm_release.argocd.name
+}
+
+output "app_of_apps_release_name" {
+  description = "App-of-apps Helm release name"
+  value       = helm_release.app_of_apps.name
 }

@@ -1,0 +1,26 @@
+# Environment name (local, staging, production)
+# Determines which values files are loaded from helm/values/<environment>/
+environment: local
+
+# Git repository URL for the Showbiz monorepo
+repoURL: ""
+
+# Git revision to track (branch, tag, or commit SHA)
+targetRevision: HEAD
+
+# ArgoCD project to assign applications to
+project: default
+
+# Destination cluster — default is the cluster ArgoCD is running on
+destination:
+  server: https://kubernetes.default.svc
+
+# Applications to deploy
+# Each entry creates an ArgoCD Application CR
+applications:
+  api:
+    enabled: true
+    namespace: showbiz
+  ui:
+    enabled: true
+    namespace: showbiz

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: app-of-apps
+description: ArgoCD app-of-apps — bootstraps all Showbiz applications for a given environment
+type: application
+version: 0.1.0
