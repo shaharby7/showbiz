@@ -49,4 +49,4 @@ Showbiz uses role-based access control (RBAC) at the project level. Organization
 
 ## Getting Started
 
-See the [Getting Started](../README.md#getting-started) section in the main README, or jump straight to the [Services documentation](services.md) to understand each component.
+See the [Local Development Guide](local-development.md) to set up your environment, or jump straight to the [Services documentation](services.md) to understand each component.
