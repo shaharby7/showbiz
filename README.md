@@ -4,7 +4,7 @@ A multi-cloud deployment platform that abstracts cloud providers behind a unifie
 
 ## Architecture
 
-See [architecture/](architecture/) for detailed design documents and ADRs.
+See [arch/](arch/) for detailed design documents and ADRs.
 
 ## Repository Structure
 
@@ -19,7 +19,7 @@ showbiz/
 ├── e2e/                  # End-to-end tests (planned)
 ├── infrastructure/       # IaC deployment (planned)
 ├── examples/             # Example projects (planned)
-└── architecture/         # Architecture docs & ADRs
+└── arch/         # Architecture docs & ADRs
 ```
 
 ## Getting Started

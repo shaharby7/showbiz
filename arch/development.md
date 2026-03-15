@@ -52,7 +52,7 @@ showbiz/
 │       ├── release-major-minor.yml # Major/minor release (all components)
 │       └── release-patch.yml      # Patch release (single component)
 │
-├── architecture/                  # Architecture docs (this directory)
+├── arch/                  # Architecture docs (this directory)
 │
 ├── pkg/                           # Shared Go packages (imported by services, CLI, SDK)
 │   └── swagger/                   # Swagger UI serving — each service provides its own spec
