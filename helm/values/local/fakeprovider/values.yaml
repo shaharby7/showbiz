@@ -33,3 +33,10 @@ resources:
 serviceAccount:
   create: true
   annotations: {}
+
+rbac:
+  clusterRole:
+    rules:
+      - apiGroups: ["kubevirt.io"]
+        resources: ["virtualmachineinstances"]
+        verbs: ["get", "list", "watch", "create", "update", "delete"]
