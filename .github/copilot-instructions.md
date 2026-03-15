@@ -18,6 +18,14 @@ Key architecture files:
 - `architecture/infra.md` — infrastructure and deployment
 - `architecture/decisions.md` — architecture decision records (ADRs)
 
+## Swagger UI for All Backend Services
+
+Every backend service (API, FakeProvider, and any future services) must expose a Swagger UI for interactive API documentation. When implementing or modifying a backend service:
+
+1. Maintain an OpenAPI/Swagger spec that accurately reflects all endpoints
+2. Serve Swagger UI at `/swagger/` so developers can explore and test the API from a browser
+3. Keep the spec in sync with the code — when endpoints are added, changed, or removed, update the spec in the same commit
+
 ## Documentation After Implementation
 
 After implementing any feature or change, update the user-facing documentation in `docs/` to reflect what was actually built:
