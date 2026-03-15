@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/showbiz-io/showbiz/services/fakeprovider/internal/service"
+	"github.com/shaharby7/showbiz/services/fakeprovider/internal/service"
 )
 
 type MachineHandler struct {

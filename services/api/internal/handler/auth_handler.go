@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/showbiz-io/showbiz/services/api/internal/middleware"
-	"github.com/showbiz-io/showbiz/services/api/internal/service"
+	"github.com/shaharby7/showbiz/services/api/internal/middleware"
+	"github.com/shaharby7/showbiz/services/api/internal/service"
 )
 
 type AuthHandler struct {

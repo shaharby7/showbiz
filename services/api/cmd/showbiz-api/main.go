@@ -1,19 +1,24 @@
 package main
 
 import (
+	_ "embed"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/showbiz-io/showbiz/services/api/internal/config"
-	"github.com/showbiz-io/showbiz/services/api/internal/database"
-	"github.com/showbiz-io/showbiz/services/api/internal/handler"
-	"github.com/showbiz-io/showbiz/services/api/internal/middleware"
-	"github.com/showbiz-io/showbiz/services/api/internal/provider"
-	"github.com/showbiz-io/showbiz/services/api/internal/repository"
-	"github.com/showbiz-io/showbiz/services/api/internal/service"
+	"github.com/shaharby7/showbiz/pkg/swagger"
+	"github.com/shaharby7/showbiz/services/api/internal/config"
+	"github.com/shaharby7/showbiz/services/api/internal/database"
+	"github.com/shaharby7/showbiz/services/api/internal/handler"
+	"github.com/shaharby7/showbiz/services/api/internal/middleware"
+	"github.com/shaharby7/showbiz/services/api/internal/provider"
+	"github.com/shaharby7/showbiz/services/api/internal/repository"
+	"github.com/shaharby7/showbiz/services/api/internal/service"
 )
+
+//go:embed openapi.yaml
+var openapiSpec []byte
 
 func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
@@ -158,6 +163,8 @@ func main() {
 			})
 		})
 	})
+
+	swagger.RegisterRoutes(r, "Showbiz API", openapiSpec)
 
 	addr := ":" + cfg.APIPort
 	slog.Info("starting server", "addr", addr)

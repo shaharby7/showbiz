@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/showbiz-io/showbiz/services/fakeprovider/internal/kubevirt"
-	"github.com/showbiz-io/showbiz/services/fakeprovider/internal/model"
+	"github.com/shaharby7/showbiz/services/fakeprovider/internal/kubevirt"
+	"github.com/shaharby7/showbiz/services/fakeprovider/internal/model"
 )
 
 type MachineService struct {

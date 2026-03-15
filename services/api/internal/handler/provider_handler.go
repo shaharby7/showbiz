@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/showbiz-io/showbiz/services/api/internal/provider"
+	"github.com/shaharby7/showbiz/services/api/internal/provider"
 )
 
 // ProviderHandler handles provider-related HTTP requests.

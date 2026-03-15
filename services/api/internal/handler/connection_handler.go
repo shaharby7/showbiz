@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/showbiz-io/showbiz/services/api/internal/service"
+	"github.com/shaharby7/showbiz/services/api/internal/service"
 )
 
 type ConnectionHandler struct {

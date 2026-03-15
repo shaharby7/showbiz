@@ -1,0 +1,209 @@
+openapi: "3.0.3"
+info:
+  title: Showbiz FakeProvider API
+  description: >
+    Local development provider service for Showbiz. Manages virtual machines
+    on KubeVirt as a stand-in for real cloud providers.
+  version: "0.1.0"
+
+servers:
+  - url: http://localhost:8081
+    description: Local development
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [Health]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/machines:
+    post:
+      summary: Create a machine
+      operationId: createMachine
+      tags: [Machines]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMachineInput"
+      responses:
+        "201":
+          description: Machine created (provisioning starts asynchronously)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: List all machines
+      operationId: listMachines
+      tags: [Machines]
+      responses:
+        "200":
+          description: List of machines
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Machine"
+
+  /v1/machines/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a machine
+      operationId: getMachine
+      tags: [Machines]
+      responses:
+        "200":
+          description: Machine details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        "404":
+          description: Machine not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      summary: Update a machine
+      operationId: updateMachine
+      tags: [Machines]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMachineInput"
+      responses:
+        "200":
+          description: Machine updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Machine"
+        "404":
+          description: Machine not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a machine
+      operationId: deleteMachine
+      tags: [Machines]
+      responses:
+        "204":
+          description: Machine deleted
+        "404":
+          description: Machine not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    CreateMachineInput:
+      type: object
+      required: [name, namespace, cpu, memoryMB, image]
+      properties:
+        name:
+          type: string
+          example: my-vm
+        namespace:
+          type: string
+          example: vmis
+        cpu:
+          type: integer
+          minimum: 1
+          example: 2
+        memoryMB:
+          type: integer
+          minimum: 1
+          example: 1024
+        image:
+          type: string
+          example: quay.io/kubevirt/cirros-container-disk-demo
+
+    UpdateMachineInput:
+      type: object
+      properties:
+        cpu:
+          type: integer
+          minimum: 1
+          example: 4
+        memoryMB:
+          type: integer
+          minimum: 1
+          example: 2048
+
+    Machine:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        namespace:
+          type: string
+        cpu:
+          type: integer
+        memoryMB:
+          type: integer
+        image:
+          type: string
+        status:
+          type: string
+          enum: [Initialized, Provisioning, Ready, Failed, Deleted]
+        ip:
+          type: string
+          description: Assigned when status is Ready
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string

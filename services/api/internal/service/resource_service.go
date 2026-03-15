@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/showbiz-io/showbiz/services/api/internal/model"
-	"github.com/showbiz-io/showbiz/services/api/internal/provider"
-	"github.com/showbiz-io/showbiz/services/api/internal/repository"
+	"github.com/shaharby7/showbiz/services/api/internal/model"
+	"github.com/shaharby7/showbiz/services/api/internal/provider"
+	"github.com/shaharby7/showbiz/services/api/internal/repository"
 )
 
 type ResourceService struct {

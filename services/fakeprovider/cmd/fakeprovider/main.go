@@ -1,16 +1,21 @@
 package main
 
 import (
+	_ "embed"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
-	"github.com/showbiz-io/showbiz/services/fakeprovider/internal/handler"
-	"github.com/showbiz-io/showbiz/services/fakeprovider/internal/kubevirt"
-	"github.com/showbiz-io/showbiz/services/fakeprovider/internal/service"
+	"github.com/shaharby7/showbiz/pkg/swagger"
+	"github.com/shaharby7/showbiz/services/fakeprovider/internal/handler"
+	"github.com/shaharby7/showbiz/services/fakeprovider/internal/kubevirt"
+	"github.com/shaharby7/showbiz/services/fakeprovider/internal/service"
 )
+
+//go:embed openapi.yaml
+var openapiSpec []byte
 
 func main() {
 	port := envOrDefault("FAKEPROVIDER_PORT", "8081")
@@ -41,6 +46,8 @@ func main() {
 		r.Put("/{id}", machineHandler.Update)
 		r.Delete("/{id}", machineHandler.Delete)
 	})
+
+	swagger.RegisterRoutes(r, "FakeProvider API", openapiSpec)
 
 	slog.Info("starting fakeprovider", "port", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {

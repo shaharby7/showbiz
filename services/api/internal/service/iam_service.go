@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/showbiz-io/showbiz/services/api/internal/model"
-	"github.com/showbiz-io/showbiz/services/api/internal/repository"
+	"github.com/shaharby7/showbiz/services/api/internal/model"
+	"github.com/shaharby7/showbiz/services/api/internal/repository"
 )
 
 type IAMService struct {

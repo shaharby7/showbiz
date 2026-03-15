@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/showbiz-io/showbiz/services/api/internal/model"
+	"github.com/shaharby7/showbiz/services/api/internal/model"
 )
 
 type PolicyRepo struct {

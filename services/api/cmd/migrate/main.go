@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/showbiz-io/showbiz/services/api/internal/config"
+	"github.com/shaharby7/showbiz/services/api/internal/config"
 )
 
 func main() {
