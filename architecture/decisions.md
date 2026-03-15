@@ -207,4 +207,13 @@
 
 ---
 
+## ADR-024: Single Go Module with Shared Packages
+
+**Status:** Accepted  
+**Context:** The repository contains multiple Go services (`services/api`, `services/fakeprovider`) and Go-based components (CLI, SDK, Terraform provider) that share common patterns — HTTP helpers, Swagger UI serving, middleware, error types, and more. Maintaining separate `go.mod` files per service leads to duplicated code and inconsistent implementations (e.g., each service implementing its own Swagger handler).  
+**Decision:** The entire repository uses a **single Go module** (`github.com/shaharby7/showbiz`). Shared code lives in a top-level `pkg/` directory. Services import shared packages directly. Each service still has its own `cmd/` entrypoint and `internal/` for service-specific logic.  
+**Consequences:** Simpler dependency management — one `go.mod`, one `go.sum`. Shared packages are versioned together with the rest of the repo. Cross-service refactoring is easier. Trade-off: the module includes all dependencies for all services, but this is acceptable for a monorepo.
+
+---
+
 > Add new ADRs below as decisions are made during architecture design.

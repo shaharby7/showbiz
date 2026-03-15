@@ -4,7 +4,33 @@
 
 ## Overview
 
-Showbiz is developed as a **monorepo** with all components in a single repository. CI/CD uses **GitHub Actions**. Local development uses a **devcontainer** (VS Code / GitHub Codespaces). Infrastructure is documented separately in [infra.md](./infra.md).
+Showbiz is developed as a **monorepo** with all components in a single repository and a **single Go module** (`github.com/shaharby7/showbiz`). CI/CD uses **GitHub Actions**. Local development uses a **devcontainer** (VS Code / GitHub Codespaces). Infrastructure is documented separately in [infra.md](./infra.md).
+
+---
+
+## Go Module Structure
+
+The entire repository is a single Go module. This means one `go.mod` at the repo root, shared dependencies, and a `pkg/` directory for code reused across services and components.
+
+```
+github.com/shaharby7/showbiz
+├── go.mod                          # Single module for the entire repo
+├── go.sum
+├── pkg/                            # Shared Go packages
+│   └── swagger/                    # Swagger UI serving (used by all backend services)
+├── services/
+│   ├── api/                        # Imports pkg/* + has its own internal/
+│   └── fakeprovider/               # Imports pkg/* + has its own internal/
+├── sdk/go/                         # Go SDK (same module)
+└── cli/                            # CLI (same module)
+```
+
+### Rules
+
+1. **Shared code goes in `pkg/`** — any package used by more than one service or component belongs in `pkg/`. Examples: Swagger UI handler, common HTTP helpers, shared middleware, error types.
+2. **Service-specific code stays in `internal/`** — each service keeps its own `internal/` directory for code that should not be imported by other services.
+3. **Services must not import each other's `internal/`** — cross-service communication is always via HTTP APIs, never via direct Go imports.
+4. **Each service registers shared functionality** — for example, every backend service calls `swagger.RegisterRoutes(router, spec)` with its own OpenAPI spec, rather than reimplementing Swagger UI serving.
 
 ---
 
@@ -12,6 +38,9 @@ Showbiz is developed as a **monorepo** with all components in a single repositor
 
 ```
 showbiz/
+├── go.mod                             # Single Go module: github.com/shaharby7/showbiz
+├── go.sum
+│
 ├── .devcontainer/
 │   ├── devcontainer.json          # Devcontainer config
 │   ├── docker-compose.yml         # MySQL + supporting services
@@ -24,6 +53,9 @@ showbiz/
 │       └── release-patch.yml      # Patch release (single component)
 │
 ├── architecture/                  # Architecture docs (this directory)
+│
+├── pkg/                           # Shared Go packages (imported by services, CLI, SDK)
+│   └── swagger/                   # Swagger UI serving — each service provides its own spec
 │
 ├── services/                      # Backend microservices
 │   └── api/                       # Core API — main entry point for clients
@@ -38,19 +70,16 @@ showbiz/
 │       │   ├── repository/        # MySQL data access
 │       │   ├── service/           # Business logic
 │       │   └── provider/          # Provider abstraction layer
-│       ├── migrations/            # SQL migration files
-│       ├── go.mod
-│       └── Makefile
+│       └── migrations/            # SQL migration files
 │   └── fakeprovider/              # FakeProvider — KubeVirt VM management
 │       ├── cmd/
 │       │   └── fakeprovider/
 │       │       └── main.go
-│       ├── internal/
-│       │   ├── handler/           # HTTP handlers
-│       │   ├── model/             # Machine model
-│       │   ├── service/           # Business logic + async provisioning
-│       │   └── kubevirt/          # KubeVirt client (client-go dynamic)
-│       └── go.mod
+│       └── internal/
+│           ├── handler/           # HTTP handlers
+│           ├── model/             # Machine model
+│           ├── service/           # Business logic + async provisioning
+│           └── kubevirt/          # KubeVirt client (client-go dynamic)
 │
 ├── sdk/
 │   ├── go/                        # Go SDK
@@ -64,13 +93,15 @@ showbiz/
 │
 ├── e2e/                           # End-to-end tests
 │
+├── docs/                          # User-facing documentation
+│
 ├── infra/                         # Infrastructure-as-code (see infra.md)
 ├── helm/                          # Helm charts and values (see infra.md)
 │   ├── charts/
 │   │   ├── app-of-apps/           # ArgoCD app-of-apps bootstrap chart
 │   │   └── showbiz-app/           # Generic chart for Showbiz services
 │   └── values/                    # Per-environment values
-│       └── local/                 # Local env values (api/, ui/)
+│       └── local/                 # Local env values (api/, ui/, fakeprovider/)
 │
 ├── examples/                      # Example projects
 ├── VERSION                        # Current major.minor version
