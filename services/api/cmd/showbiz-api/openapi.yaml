@@ -15,6 +15,7 @@ tags:
   - name: Projects
   - name: Connections
   - name: Resources
+  - name: Resource Types
   - name: IAM Policies
   - name: IAM Attachments
 
@@ -869,13 +870,15 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, connectionId, resourceType]
+              required: [name, resourceType]
               properties:
                 name:
                   type: string
                 connectionId:
                   type: string
                   format: uuid
+                  nullable: true
+                  description: Required for provider-backed resource types, null for Showbiz-managed types
                 resourceType:
                   type: string
                 values:
@@ -1017,6 +1020,63 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── Resource Types ────────────────────────────────────────────────────
+  /v1/resource-types:
+    get:
+      operationId: listResourceTypes
+      tags: [Resource Types]
+      summary: List all registered resource types
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of resource types with schemas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceTypeInfo"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/resource-types/{name}:
+    get:
+      operationId: getResourceType
+      tags: [Resource Types]
+      summary: Get a resource type by name
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resource type details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceTypeInfo"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource type not found
           content:
             application/json:
               schema:
@@ -1464,6 +1524,7 @@ components:
         connectionId:
           type: string
           format: uuid
+          nullable: true
         resourceType:
           type: string
         values:
@@ -1476,6 +1537,34 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    ResourceTypeInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        requiresConnection:
+          type: boolean
+        inputSchema:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldSchema"
+        outputSchema:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldSchema"
+
+    FieldSchema:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        required:
+          type: boolean
+        description:
+          type: string
 
     Provider:
       type: object

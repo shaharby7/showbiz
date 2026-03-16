@@ -6,6 +6,7 @@ import { ConnectionsResource } from "./resources/connections.js";
 import { ResourcesResource } from "./resources/resources.js";
 import { IAMResource } from "./resources/iam.js";
 import { ProvidersResource } from "./resources/providers.js";
+import { ResourceTypesResource } from "./resources/resourceTypes.js";
 import type { ListOptions } from "./types.js";
 
 export interface ClientOptions {
@@ -35,6 +36,7 @@ export class ShowbizClient {
   readonly resources: ResourcesResource;
   readonly iam: IAMResource;
   readonly providers: ProvidersResource;
+  readonly resourceTypes: ResourceTypesResource;
 
   constructor(options: ClientOptions) {
     this._baseURL = options.baseURL.replace(/\/+$/, "");
@@ -49,6 +51,7 @@ export class ShowbizClient {
     this.resources = new ResourcesResource(this);
     this.iam = new IAMResource(this);
     this.providers = new ProvidersResource(this);
+    this.resourceTypes = new ResourceTypesResource(this);
   }
 
   setTokens(accessToken: string, refreshToken: string): void {

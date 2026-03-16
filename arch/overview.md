@@ -50,14 +50,19 @@ Showbiz enables developers to manage cloud resources across any provider through
 ```
 Provider (read-only, platform-defined)
 
+ResourceType (platform-defined: machine, network, ...)
+ ├── Defines input/output schema and validation
+ └── Declares whether a provider connection is required
+
 Organization
  ├── Users (JWT auth, email/password, verified email)
  ├── Billing
  └── Project (fully isolated)
       ├── IAM Policies (RBAC per user)
       ├── Connections (link to a provider account + credentials)
-      └── Resources (machine, network)
-           └── deployed via a Connection
+      └── Resources (typed: machine, network, ...)
+           ├── Provider-backed (deployed via a Connection)
+           └── Showbiz-managed (no connection required)
 ```
 
 ## Components

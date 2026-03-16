@@ -60,6 +60,7 @@ async function handleRegister() {
   <div class="flex items-center justify-center min-h-screen bg-surface-ground px-4">
     <div class="w-full max-w-md">
       <div class="text-center mb-8">
+        <img src="/showbiz.svg" alt="Showbiz" class="h-12 w-12 mx-auto mb-3" />
         <h1 class="text-4xl font-bold text-primary mb-2">Showbiz</h1>
         <p class="text-muted-color">Create your account</p>
       </div>

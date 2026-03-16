@@ -12,7 +12,7 @@ Showbiz is a platform that allows developers to deploy projects to different clo
 | [cli.md](./cli.md) | CLI tool design |
 | [terraform.md](./terraform.md) | Terraform provider plugin design |
 | [ui.md](./ui.md) | Web UI design |
-| [provider-abstraction.md](./provider-abstraction.md) | Cloud provider abstraction layer and implemented providers (stub, fakeprovider) |
+| [provider-abstraction.md](./provider-abstraction.md) | Cloud provider abstraction layer and implemented providers (fakeprovider) |
 | [development.md](./development.md) | Development workflow, CI/CD, versioning, local setup |
 | [infra.md](./infra.md) | Infrastructure-as-code: Terraform modules, Terragrunt, Helm |
 | [database.md](./database.md) | MySQL schema and table definitions |

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { Resource, Connection } from '@showbiz/sdk'
+import type { Resource, Connection, ResourceTypeInfo } from '@showbiz/sdk'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -17,9 +17,11 @@ const api = useApi()
 const projectStore = useProjectStore()
 
 const projectId = computed(() => (route.params.projectId as string) || projectStore.currentProject?.id)
+const filterType = computed(() => (route.params.resourceType as string) || null)
 
 const resources = ref<Resource[]>([])
 const connections = ref<Connection[]>([])
+const resourceTypes = ref<ResourceTypeInfo[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -28,7 +30,17 @@ const resourceToDelete = ref<Resource | null>(null)
 const deleting = ref(false)
 const deleteError = ref<string | null>(null)
 
-function connectionName(connectionId: string): string {
+const currentTypeInfo = computed(() =>
+  filterType.value ? resourceTypes.value.find((rt) => rt.name === filterType.value) || null : null,
+)
+
+const filteredResources = computed(() => {
+  if (!filterType.value) return resources.value
+  return resources.value.filter((r) => r.resourceType === filterType.value)
+})
+
+function connectionName(connectionId: string | null): string {
+  if (!connectionId) return '—'
   const conn = connections.value.find((c) => c.id === connectionId)
   return conn?.name || connectionId
 }
@@ -48,17 +60,24 @@ function statusSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' 
   }
 }
 
+function fieldValue(resource: Resource, fieldName: string): string {
+  const val = resource.values?.[fieldName]
+  return val !== undefined && val !== null ? String(val) : '—'
+}
+
 async function fetchData() {
   if (!projectId.value) return
   loading.value = true
   error.value = null
   try {
-    const [resourceResult, connectionResult] = await Promise.all([
+    const [resourceResult, connectionResult, typeResult] = await Promise.all([
       api.resources.list(projectId.value),
       api.connections.list(projectId.value),
+      api.resourceTypes.list(),
     ])
     resources.value = resourceResult.data
     connections.value = connectionResult.data
+    resourceTypes.value = typeResult
   } catch (e: any) {
     error.value = e.message || 'Failed to load resources'
   } finally {
@@ -96,7 +115,24 @@ function formatDate(dateStr: string) {
   })
 }
 
+function typeLabel(name: string): string {
+  return name.charAt(0).toUpperCase() + name.slice(1) + 's'
+}
+
+function typeIcon(name: string): string {
+  switch (name) {
+    case 'machine':
+      return 'pi pi-desktop'
+    case 'network':
+      return 'pi pi-sitemap'
+    default:
+      return 'pi pi-box'
+  }
+}
+
 onMounted(fetchData)
+watch(projectId, fetchData)
+watch(filterType, fetchData)
 </script>
 
 <template>
@@ -104,16 +140,22 @@ onMounted(fetchData)
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-color">Resources</h1>
+        <h1 class="text-3xl font-bold text-color">
+          <template v-if="filterType">{{ typeLabel(filterType) }}</template>
+          <template v-else>Resources</template>
+        </h1>
         <p v-if="projectStore.currentProject" class="text-muted-color mt-1">
-          Resources in {{ projectStore.currentProject.name }}
+          <template v-if="filterType">{{ typeLabel(filterType) }} in {{ projectStore.currentProject.name }}</template>
+          <template v-else>Resources in {{ projectStore.currentProject.name }}</template>
         </p>
       </div>
       <Button
         v-if="projectId"
-        label="Create Resource"
+        :label="filterType ? `Create ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}` : 'Create Resource'"
         icon="pi pi-plus"
-        @click="router.push({ name: 'resource-create', params: { projectId: projectId } })"
+        @click="filterType
+          ? router.push({ name: 'resource-create-typed', params: { projectId, resourceType: filterType } })
+          : router.push({ name: 'resource-create', params: { projectId } })"
       />
     </div>
 
@@ -130,17 +172,17 @@ onMounted(fetchData)
       <i class="pi pi-spinner pi-spin text-4xl text-primary"></i>
     </div>
 
-    <!-- DataTable -->
+    <!-- Data table -->
     <DataTable
       v-if="projectId && !loading"
-      :value="resources"
+      :value="filteredResources"
       :rowHover="true"
       stripedRows
     >
       <template #empty>
         <div class="text-center py-8 text-muted-color">
-          <i class="pi pi-box text-4xl mb-3 block"></i>
-          <p>No resources yet. Create your first resource to get started.</p>
+          <i :class="filterType ? typeIcon(filterType) : 'pi pi-box'" class="text-4xl mb-3 block"></i>
+          <p>No {{ filterType || '' }} resources yet. Create one to get started.</p>
         </div>
       </template>
       <Column field="name" header="Name" sortable>
@@ -148,12 +190,38 @@ onMounted(fetchData)
           <span class="font-semibold text-color">{{ data.name }}</span>
         </template>
       </Column>
-      <Column field="resourceType" header="Type" sortable>
+      <!-- Type column (only when showing all types) -->
+      <Column v-if="!filterType" field="resourceType" header="Type" sortable>
         <template #body="{ data }">
           <span class="text-color">{{ data.resourceType }}</span>
         </template>
       </Column>
-      <Column field="connectionId" header="Connection" sortable>
+      <!-- Type-specific input columns -->
+      <Column
+        v-if="currentTypeInfo"
+        v-for="field in currentTypeInfo.inputSchema"
+        :key="field.name"
+        :header="field.name"
+        sortable
+      >
+        <template #body="{ data }">
+          <span class="text-color">{{ fieldValue(data, field.name) }}</span>
+        </template>
+      </Column>
+      <!-- Type-specific output columns -->
+      <Column
+        v-if="currentTypeInfo"
+        v-for="field in currentTypeInfo.outputSchema"
+        :key="'out-' + field.name"
+        :header="field.name"
+        sortable
+      >
+        <template #body="{ data }">
+          <span class="text-muted-color">{{ fieldValue(data, field.name) }}</span>
+        </template>
+      </Column>
+      <!-- Connection (only for types that require it) -->
+      <Column v-if="!currentTypeInfo || currentTypeInfo.requiresConnection" header="Connection" sortable>
         <template #body="{ data }">
           <span class="text-muted-color">{{ connectionName(data.connectionId) }}</span>
         </template>

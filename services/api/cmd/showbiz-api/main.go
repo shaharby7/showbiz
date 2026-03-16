@@ -14,6 +14,7 @@ import (
 	"github.com/shaharby7/showbiz/services/api/internal/middleware"
 	"github.com/shaharby7/showbiz/services/api/internal/provider"
 	"github.com/shaharby7/showbiz/services/api/internal/repository"
+	"github.com/shaharby7/showbiz/services/api/internal/resource"
 	"github.com/shaharby7/showbiz/services/api/internal/service"
 )
 
@@ -51,9 +52,13 @@ func main() {
 	projectHandler := handler.NewProjectHandler(projectService)
 
 	providerRegistry := provider.NewRegistry()
-	providerRegistry.Register("stub", provider.NewStubProvider())
 	providerRegistry.Register("fakeprovider", provider.NewFakeProvider(cfg.FakeProviderURL))
 	providerHandler := handler.NewProviderHandler(providerRegistry)
+
+	resourceTypeRegistry := resource.NewRegistry()
+	resourceTypeRegistry.Register(resource.NewMachineResourceType())
+	resourceTypeRegistry.Register(resource.NewNetworkResourceType())
+	resourceTypeHandler := handler.NewResourceTypeHandler(resourceTypeRegistry)
 
 	connectionService := service.NewConnectionService(connectionRepo, providerRegistry)
 	connectionHandler := handler.NewConnectionHandler(connectionService)
@@ -63,7 +68,7 @@ func main() {
 	iamService := service.NewIAMService(policyRepo, attachmentRepo, projectRepo, userRepo)
 	iamHandler := handler.NewIAMHandler(iamService)
 
-	resourceService := service.NewResourceService(resourceRepo, connectionRepo, providerRegistry)
+	resourceService := service.NewResourceService(resourceRepo, connectionRepo, providerRegistry, resourceTypeRegistry)
 	resourceHandler := handler.NewResourceHandler(resourceService)
 
 	r := chi.NewRouter()
@@ -94,6 +99,12 @@ func main() {
 			r.Route("/providers", func(r chi.Router) {
 				r.Get("/", providerHandler.List)
 				r.Get("/{id}", providerHandler.Get)
+			})
+
+			// Resource type routes (read-only)
+			r.Route("/resource-types", func(r chi.Router) {
+				r.Get("/", resourceTypeHandler.List)
+				r.Get("/{name}", resourceTypeHandler.Get)
 			})
 
 			// Organization routes

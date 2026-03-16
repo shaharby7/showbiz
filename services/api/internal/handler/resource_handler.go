@@ -31,10 +31,6 @@ func (h *ResourceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "Name is required")
 		return
 	}
-	if input.ConnectionID == "" {
-		Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "ConnectionID is required")
-		return
-	}
 	if input.ResourceType == "" {
 		Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "ResourceType is required")
 		return
@@ -49,10 +45,18 @@ func (h *ResourceHandler) Create(w http.ResponseWriter, r *http.Request) {
 			Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "Provider not found")
 		case "invalid resource type":
 			Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "Invalid resource type for this connection's provider")
+		case "unknown resource type":
+			Error(w, http.StatusBadRequest, "VALIDATION_ERROR", "Unknown resource type")
 		case "resource name already exists":
 			Error(w, http.StatusConflict, "CONFLICT", "Resource name already exists in this project")
 		default:
-			Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to create resource")
+			if len(err.Error()) > 17 && err.Error()[:17] == "validation error:" {
+				Error(w, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
+			} else if len(err.Error()) > 24 && err.Error()[:24] == "connectionId is required" {
+				Error(w, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
+			} else {
+				Error(w, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to create resource")
+			}
 		}
 		return
 	}

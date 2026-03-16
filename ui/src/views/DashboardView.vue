@@ -135,7 +135,7 @@ watch(() => projectStore.currentProject, fetchProjectStats)
       <Card>
         <template #content>
           <div class="flex items-center gap-4">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 text-blue-600">
+            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
               <i class="pi pi-link text-xl"></i>
             </div>
             <div>
@@ -152,7 +152,7 @@ watch(() => projectStore.currentProject, fetchProjectStats)
       <Card>
         <template #content>
           <div class="flex items-center gap-4">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 text-green-600">
+            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400">
               <i class="pi pi-box text-xl"></i>
             </div>
             <div>
@@ -169,7 +169,7 @@ watch(() => projectStore.currentProject, fetchProjectStats)
       <Card>
         <template #content>
           <div class="flex items-center gap-4">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100 text-purple-600">
+            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400">
               <i class="pi pi-folder text-xl"></i>
             </div>
             <div>
@@ -183,7 +183,7 @@ watch(() => projectStore.currentProject, fetchProjectStats)
       <Card>
         <template #content>
           <div class="flex items-center gap-4">
-            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-amber-100 text-amber-600">
+            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
               <i class="pi pi-building text-xl"></i>
             </div>
             <div>
@@ -244,13 +244,6 @@ watch(() => projectStore.currentProject, fetchProjectStats)
                 params: { projectId: projectStore.currentProject!.id },
               })
             "
-          />
-          <Button
-            label="Providers"
-            icon="pi pi-server"
-            severity="secondary"
-            outlined
-            @click="router.push({ name: 'providers' })"
           />
         </div>
       </template>

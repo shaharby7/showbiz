@@ -71,14 +71,67 @@ type DriftReport struct {
 }
 ```
 
+## Resource Type Interface
+
+Each resource type implements a common interface that provides validation and schema metadata. Resource types are registered separately from providers — they define what types exist, while providers declare which types they support.
+
+```go
+// ResourceType defines the contract every resource type must implement.
+type ResourceType interface {
+    // Name returns the type identifier (e.g., "machine", "network").
+    Name() string
+
+    // RequiresConnection returns true if this type needs a provider connection.
+    // Showbiz-managed types (e.g., network) return false.
+    RequiresConnection() bool
+
+    // ValidateCreate validates input values before creating a resource.
+    ValidateCreate(values map[string]interface{}) error
+
+    // ValidateUpdate validates values before updating an existing resource.
+    ValidateUpdate(currentValues, newValues map[string]interface{}) error
+
+    // InputSchema returns the schema of fields accepted during creation.
+    InputSchema() []FieldSchema
+
+    // OutputSchema returns the schema of fields returned after provisioning.
+    OutputSchema() []FieldSchema
+}
+
+// FieldSchema describes a single field in a resource type's input or output.
+type FieldSchema struct {
+    Name        string `json:"name"`
+    Type        string `json:"type"`        // "string", "number", "boolean"
+    Required    bool   `json:"required"`
+    Description string `json:"description"`
+}
+```
+
+### Registered Resource Types
+
+| Type | Requires Connection | Description |
+|---|---|---|
+| `machine` | Yes | Compute instance. Inputs: cpu, memoryMB, image, namespace. Outputs: ip, providerResourceId. |
+| `network` | No | Virtual network managed by Showbiz. Inputs: cidr, description. Outputs: gateway. |
+
+### Resource Type Registration
+
+Resource types are compiled-in and registered at startup alongside providers:
+
+```go
+resourceTypeRegistry := provider.NewResourceTypeRegistry()
+resourceTypeRegistry.Register(provider.NewMachineResourceType())
+resourceTypeRegistry.Register(provider.NewNetworkResourceType())
+```
+
 ## Resource Type Mapping
 
-Each provider maps unified resource types to its own implementation:
+Each provider maps unified resource types to its own implementation. Not all types require a provider — Showbiz-managed types are handled directly by the platform.
 
-| Unified Type | What it represents | Example provider mapping |
-|---|---|---|
-| `machine` | A compute instance (VM/server) | AWS → EC2, GCP → Compute Engine, Azure → VM |
-| `network` | A virtual network / VPC | AWS → VPC, GCP → VPC Network, Azure → VNet |
+| Unified Type | Requires Connection | What it represents | Example provider mapping |
+|---|---|---|---|
+| `machine` | Yes | A compute instance (VM/server) | AWS → EC2, GCP → Compute Engine, Azure → VM |
+| `network` | No | A virtual network (Showbiz-managed) | N/A — managed by Showbiz directly |
 
 The **values** for each resource type are provider-agnostic. The provider implementation is responsible for translating them to provider-specific API calls.
 
@@ -88,7 +141,6 @@ Providers are compiled-in and registered at startup:
 
 ```go
 registry := providers.NewRegistry()
-registry.Register("stub", provider.NewStubProvider())
 registry.Register("fakeprovider", provider.NewFakeProvider(cfg.FakeProviderURL))
 // Future: registry.Register("aws", aws.NewProvider())
 ```
@@ -96,10 +148,6 @@ registry.Register("fakeprovider", provider.NewFakeProvider(cfg.FakeProviderURL))
 ---
 
 ## Implemented Providers
-
-### stub
-
-A mock provider for unit testing and development. All operations succeed immediately with hardcoded responses. Supports `machine` and `network` resource types. No real infrastructure is provisioned.
 
 ### fakeprovider
 

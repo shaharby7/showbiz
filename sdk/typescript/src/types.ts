@@ -41,7 +41,7 @@ export interface Resource {
   id: string;
   name: string;
   projectId: string;
-  connectionId: string;
+  connectionId: string | null;
   resourceType: string;
   values: Record<string, unknown>;
   status: string;
@@ -70,6 +70,20 @@ export interface PolicyAttachment {
 export interface ProviderInfo {
   name: string;
   resourceTypes: string[];
+}
+
+export interface ResourceTypeInfo {
+  name: string;
+  requiresConnection: boolean;
+  inputSchema: FieldSchema[];
+  outputSchema: FieldSchema[];
+}
+
+export interface FieldSchema {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
 }
 
 export interface Pagination {
@@ -137,7 +151,7 @@ export interface UpdateConnectionInput {
 
 export interface CreateResourceInput {
   name: string;
-  connectionId: string;
+  connectionId?: string;
   resourceType: string;
   values?: Record<string, unknown>;
 }

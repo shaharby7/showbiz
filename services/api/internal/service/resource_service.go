@@ -4,30 +4,34 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"time"
 
 	"github.com/shaharby7/showbiz/services/api/internal/model"
 	"github.com/shaharby7/showbiz/services/api/internal/provider"
 	"github.com/shaharby7/showbiz/services/api/internal/repository"
+	"github.com/shaharby7/showbiz/services/api/internal/resource"
 )
 
 type ResourceService struct {
-	resourceRepo *repository.ResourceRepo
-	connRepo     *repository.ConnectionRepo
-	registry     *provider.Registry
+	resourceRepo     *repository.ResourceRepo
+	connRepo         *repository.ConnectionRepo
+	registry         *provider.Registry
+	resourceTypeReg  *resource.Registry
 }
 
-func NewResourceService(resourceRepo *repository.ResourceRepo, connRepo *repository.ConnectionRepo, registry *provider.Registry) *ResourceService {
+func NewResourceService(resourceRepo *repository.ResourceRepo, connRepo *repository.ConnectionRepo, registry *provider.Registry, resourceTypeReg *resource.Registry) *ResourceService {
 	return &ResourceService{
-		resourceRepo: resourceRepo,
-		connRepo:     connRepo,
-		registry:     registry,
+		resourceRepo:    resourceRepo,
+		connRepo:        connRepo,
+		registry:        registry,
+		resourceTypeReg: resourceTypeReg,
 	}
 }
 
 type CreateResourceInput struct {
 	Name         string                 `json:"name"`
-	ConnectionID string                 `json:"connectionId"`
+	ConnectionID string                 `json:"connectionId,omitempty"`
 	ResourceType string                 `json:"resourceType"`
 	Values       map[string]interface{} `json:"values"`
 }
@@ -40,36 +44,19 @@ func (s *ResourceService) Create(ctx context.Context, projectID string, input Cr
 	if input.Name == "" {
 		return nil, fmt.Errorf("name is required")
 	}
-	if input.ConnectionID == "" {
-		return nil, fmt.Errorf("connectionId is required")
-	}
 	if input.ResourceType == "" {
 		return nil, fmt.Errorf("resourceType is required")
 	}
 
-	// Validate connection exists
-	conn, err := s.connRepo.GetConnectionByID(ctx, input.ConnectionID)
-	if err != nil {
-		return nil, fmt.Errorf("get connection: %w", err)
-	}
-	if conn == nil {
-		return nil, fmt.Errorf("connection not found")
+	// Look up resource type
+	rt, ok := s.resourceTypeReg.Get(input.ResourceType)
+	if !ok {
+		return nil, fmt.Errorf("unknown resource type")
 	}
 
-	// Validate resource type against provider
-	p, ok := s.registry.Get(conn.Provider)
-	if !ok {
-		return nil, fmt.Errorf("provider not found")
-	}
-	validType := false
-	for _, rt := range p.ResourceTypes() {
-		if rt == input.ResourceType {
-			validType = true
-			break
-		}
-	}
-	if !validType {
-		return nil, fmt.Errorf("invalid resource type")
+	// Validate input values against the resource type schema
+	if err := rt.ValidateCreate(input.Values); err != nil {
+		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
 	// Check name uniqueness within the project
@@ -81,27 +68,110 @@ func (s *ResourceService) Create(ctx context.Context, projectID string, input Cr
 		return nil, fmt.Errorf("resource name already exists")
 	}
 
-	// Generate deterministic ID: sbz:<resourceType>:<projectId>:<connectionName>:<resourceName>
-	id := fmt.Sprintf("sbz:%s:%s:%s:%s", input.ResourceType, projectID, conn.Name, input.Name)
+	var connID *string
+	var id string
 
-	// Call provider to create the resource
-	providerOutput, err := p.CreateResource(ctx, &provider.CreateResourceInput{
-		Type:       input.ResourceType,
-		Name:       input.Name,
-		Properties: input.Values,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("provider create: %w", err)
+	if rt.RequiresConnection() {
+		// Provider-backed resource: connection is required
+		if input.ConnectionID == "" {
+			return nil, fmt.Errorf("connectionId is required for resource type %q", input.ResourceType)
+		}
+
+		conn, err := s.connRepo.GetConnectionByID(ctx, input.ConnectionID)
+		if err != nil {
+			return nil, fmt.Errorf("get connection: %w", err)
+		}
+		if conn == nil {
+			return nil, fmt.Errorf("connection not found")
+		}
+
+		// Validate provider supports this resource type
+		p, ok := s.registry.Get(conn.Provider)
+		if !ok {
+			return nil, fmt.Errorf("provider not found")
+		}
+		validType := false
+		for _, prt := range p.ResourceTypes() {
+			if prt == input.ResourceType {
+				validType = true
+				break
+			}
+		}
+		if !validType {
+			return nil, fmt.Errorf("invalid resource type")
+		}
+
+		connID = &input.ConnectionID
+		id = fmt.Sprintf("sbz:%s:%s:%s:%s", input.ResourceType, projectID, conn.Name, input.Name)
+
+		// Call provider to create the resource
+		providerOutput, err := p.CreateResource(ctx, &provider.CreateResourceInput{
+			Type:       input.ResourceType,
+			Name:       input.Name,
+			Properties: input.Values,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("provider create: %w", err)
+		}
+
+		// Merge provider output into values
+		values := input.Values
+		if values == nil {
+			values = make(map[string]interface{})
+		}
+		if providerOutput.Properties != nil {
+			for k, v := range providerOutput.Properties {
+				values[k] = v
+			}
+		}
+
+		res := &model.Resource{
+			ID:           id,
+			Name:         input.Name,
+			ProjectID:    projectID,
+			ConnectionID: connID,
+			ResourceType: input.ResourceType,
+			Values:       values,
+			Status:       providerOutput.Status,
+		}
+
+		if err := s.resourceRepo.CreateResource(ctx, res); err != nil {
+			return nil, fmt.Errorf("create resource: %w", err)
+		}
+
+		// If the resource is not yet ready, start async polling
+		if providerOutput.Status != "active" && providerOutput.Status != "running" && providerOutput.Status != "Ready" {
+			providerResourceID := providerOutput.ID
+			s.startAsyncStatusPoller(id, providerResourceID, p)
+		} else {
+			if err := s.resourceRepo.UpdateResource(ctx, id, values, "active"); err != nil {
+				return nil, fmt.Errorf("activate resource: %w", err)
+			}
+			res.Status = "active"
+		}
+
+		return res, nil
 	}
 
-	// Merge provider output into values
+	// Showbiz-managed resource: no connection needed
+	id = fmt.Sprintf("sbz:%s:%s:%s", input.ResourceType, projectID, input.Name)
+
 	values := input.Values
 	if values == nil {
 		values = make(map[string]interface{})
 	}
-	if providerOutput.Properties != nil {
-		for k, v := range providerOutput.Properties {
-			values[k] = v
+
+	// For networks, compute gateway from CIDR
+	if input.ResourceType == "network" {
+		if cidrStr, ok := values["cidr"].(string); ok {
+			ip, ipNet, err := net.ParseCIDR(cidrStr)
+			if err == nil {
+				gw := make(net.IP, len(ip))
+				copy(gw, ipNet.IP)
+				// Gateway is the first usable IP (network address + 1)
+				gw[len(gw)-1]++
+				values["gateway"] = gw.String()
+			}
 		}
 	}
 
@@ -109,26 +179,14 @@ func (s *ResourceService) Create(ctx context.Context, projectID string, input Cr
 		ID:           id,
 		Name:         input.Name,
 		ProjectID:    projectID,
-		ConnectionID: input.ConnectionID,
+		ConnectionID: nil,
 		ResourceType: input.ResourceType,
 		Values:       values,
-		Status:       providerOutput.Status,
+		Status:       "active",
 	}
 
 	if err := s.resourceRepo.CreateResource(ctx, res); err != nil {
 		return nil, fmt.Errorf("create resource: %w", err)
-	}
-
-	// If the resource is not yet ready, start async polling
-	if providerOutput.Status != "active" && providerOutput.Status != "running" && providerOutput.Status != "Ready" {
-		providerResourceID := providerOutput.ID
-		s.startAsyncStatusPoller(id, providerResourceID, p)
-	} else {
-		// Resource is immediately ready — set to active
-		if err := s.resourceRepo.UpdateResource(ctx, id, values, "active"); err != nil {
-			return nil, fmt.Errorf("activate resource: %w", err)
-		}
-		res.Status = "active"
 	}
 
 	return res, nil
@@ -242,13 +300,15 @@ func (s *ResourceService) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("resource not found")
 	}
 
-	// Call provider to delete the resource if it has a provider-side ID
-	conn, err := s.connRepo.GetConnectionByID(ctx, res.ConnectionID)
-	if err == nil && conn != nil {
-		if p, ok := s.registry.Get(conn.Provider); ok {
-			if providerID, ok := res.Values["fakeproviderID"]; ok {
-				if idStr, ok := providerID.(string); ok {
-					_ = p.DeleteResource(ctx, idStr)
+	// Call provider to delete the resource if it has a connection
+	if res.ConnectionID != nil {
+		conn, err := s.connRepo.GetConnectionByID(ctx, *res.ConnectionID)
+		if err == nil && conn != nil {
+			if p, ok := s.registry.Get(conn.Provider); ok {
+				if providerID, ok := res.Values["fakeproviderID"]; ok {
+					if idStr, ok := providerID.(string); ok {
+						_ = p.DeleteResource(ctx, idStr)
+					}
 				}
 			}
 		}

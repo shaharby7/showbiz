@@ -9,3 +9,4 @@ export { ConnectionsResource } from "./resources/connections.js";
 export { ResourcesResource } from "./resources/resources.js";
 export { IAMResource } from "./resources/iam.js";
 export { ProvidersResource } from "./resources/providers.js";
+export { ResourceTypesResource } from "./resources/resourceTypes.js";

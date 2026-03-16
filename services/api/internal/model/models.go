@@ -46,7 +46,7 @@ type Resource struct {
 	ID           string                 `json:"id"`
 	Name         string                 `json:"name"`
 	ProjectID    string                 `json:"projectId"`
-	ConnectionID string                 `json:"connectionId"`
+	ConnectionID *string                `json:"connectionId"` // nil for Showbiz-managed resource types
 	ResourceType string                 `json:"resourceType"`
 	Values       map[string]interface{} `json:"values"`
 	Status       string                 `json:"status"`

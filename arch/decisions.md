@@ -216,4 +216,23 @@
 
 ---
 
+## ADR-025: Resource Type Interface with Schema-Driven Validation
+
+**Status:** Accepted  
+**Context:** Resources use untyped `map[string]interface{}` values with no per-type validation or schema. All resource types are treated identically in the API, SDK, and UI — the create form is a raw JSON textarea. Additionally, some resource types (e.g., network) are fully managed by Showbiz and should not require a connection to a provider.  
+**Decision:** Introduce a **ResourceType interface** that each type (machine, network) must implement. The interface enforces:
+- `Name()` — the type identifier
+- `RequiresConnection()` — whether this type needs a provider connection
+- `ValidateCreate(values)` — validate input values before creation
+- `ValidateUpdate(currentValues, newValues)` — validate values before update
+- `InputSchema()` / `OutputSchema()` — describe the expected input and output fields with types, required flags, and descriptions
+
+Resource types are registered in a **ResourceTypeRegistry** at startup (parallel to the provider registry). The API exposes `GET /v1/resource-types` so consumers (UI, CLI) can discover types and render dynamic forms. `connectionId` becomes optional — only required when `RequiresConnection()` is true. For Showbiz-managed types (e.g., network), resources are stored directly with no provider call.
+
+The resource ID format adapts: `sbz:<type>:<project>:<connection-name>:<name>` when a connection is used, `sbz:<type>:<project>:<name>` when not.
+
+**Consequences:** Each new resource type must implement the interface and be registered. Providers continue to declare which type names they support via `ResourceTypes() []string`. The UI can render per-type tabs with type-specific input forms and output columns. Validation is enforced consistently across API, SDK, and all consumers.
+
+---
+
 > Add new ADRs below as decisions are made during architecture design.

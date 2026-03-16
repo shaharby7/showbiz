@@ -69,14 +69,19 @@ const routes = [
         component: () => import('@/views/resources/ResourceCreateView.vue'),
       },
       {
+        path: 'projects/:projectId/resources/:resourceType',
+        name: 'resources-by-type',
+        component: () => import('@/views/resources/ResourceListView.vue'),
+      },
+      {
+        path: 'projects/:projectId/resources/:resourceType/new',
+        name: 'resource-create-typed',
+        component: () => import('@/views/resources/ResourceCreateView.vue'),
+      },
+      {
         path: 'projects/:projectId/iam',
         name: 'iam',
         component: () => import('@/views/iam/IAMView.vue'),
-      },
-      {
-        path: 'providers',
-        name: 'providers',
-        component: () => import('@/views/providers/ProviderListView.vue'),
       },
     ],
   },

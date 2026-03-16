@@ -45,8 +45,8 @@ The Showbiz Web UI is a browser-based dashboard for managing organizations, proj
 - **Organization Detail** — Members, billing, projects list
 - **Project Detail** — Connections, resources list, IAM policies, project settings
 - **Connection Management** — Create/edit/delete connections to provider accounts
-- **Resource Detail** — Resource type, connection, values, edit/delete
-- **Resource Create** — Form to create a machine or network resource, selecting a connection
+- **Resources** — Tabbed view with a **separate tab per resource type** (Machines, Networks, ...). Each tab renders type-specific columns based on the resource type's input/output schema (e.g., Machines shows CPU, memory, IP; Networks shows CIDR, gateway)
+- **Resource Create** — Dynamic form that adapts to the selected resource type's input schema. Connection dropdown is shown only for resource types that require a connection.
 - **IAM Management** — Browse global policies, manage org policies, attach/detach policies to users per project
 - **Providers** — Browse available provider types and their capabilities (read-only)
 - **User Settings** — Profile, password change

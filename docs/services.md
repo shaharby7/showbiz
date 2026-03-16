@@ -27,15 +27,17 @@ The API service is the central backend of Showbiz. All operations — creating o
 | Projects | `POST /v1/organizations/{orgId}/projects` | Create an isolated project |
 | Connections | `POST /v1/projects/{projectId}/connections` | Link a project to a cloud provider |
 | Resources | `POST /v1/projects/{projectId}/resources` | Provision infrastructure (VMs, networks) |
+| Resource Types | `GET /v1/resource-types` | List resource types with input/output schemas |
 | Providers | `GET /v1/providers` | List available cloud providers |
 | IAM | `POST /v1/organizations/{orgId}/policies` | Create access control policies |
 
 **How it connects to providers:**
 
-The API service contains a provider registry. When you create a resource, the API:
-1. Looks up the connection to find which provider to use
-2. Calls that provider's `CreateResource` method
-3. Tracks the resource status asynchronously (polling the provider until ready)
+The API service contains a provider registry and a resource type registry. When you create a resource, the API:
+1. Looks up the resource type to validate input values against the type's schema
+2. If the type requires a connection, looks up the connection to find which provider to use and calls that provider's `CreateResource` method
+3. If the type is Showbiz-managed (e.g., network), creates it directly without a provider
+4. Tracks provider-backed resource status asynchronously (polling the provider until ready)
 
 ---
 
