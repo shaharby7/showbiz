@@ -202,6 +202,11 @@ type CreatePolicyInput struct {
 	Permissions []string `json:"permissions"`
 }
 
+// UpdatePolicyInput is the input for updating an organization policy.
+type UpdatePolicyInput struct {
+	Permissions []string `json:"permissions"`
+}
+
 // AttachPolicyInput is the input for attaching a policy to a user in a project.
 type AttachPolicyInput struct {
 	UserEmail string `json:"userEmail"`

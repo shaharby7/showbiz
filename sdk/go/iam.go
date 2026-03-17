@@ -59,6 +59,15 @@ func (c *Client) CreateOrgPolicy(ctx context.Context, orgID string, input Create
 	return &policy, nil
 }
 
+// UpdateOrgPolicy updates a policy in an organization.
+func (c *Client) UpdateOrgPolicy(ctx context.Context, orgID, policyID string, input UpdatePolicyInput) (*Policy, error) {
+	var policy Policy
+	if err := c.do(ctx, http.MethodPut, fmt.Sprintf("/v1/organizations/%s/policies/%s", orgID, policyID), input, &policy); err != nil {
+		return nil, err
+	}
+	return &policy, nil
+}
+
 // DeleteOrgPolicy deletes a policy from an organization.
 func (c *Client) DeleteOrgPolicy(ctx context.Context, orgID, policyID string) error {
 	return c.do(ctx, http.MethodDelete, fmt.Sprintf("/v1/organizations/%s/policies/%s", orgID, policyID), nil, nil)

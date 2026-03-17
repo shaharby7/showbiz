@@ -1,6 +1,6 @@
 # CLI Tool Design
 
-> Status: 🟡 In Design
+> Status: 🟢 Implemented
 
 ## Overview
 

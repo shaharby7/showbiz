@@ -49,4 +49,10 @@ Showbiz uses role-based access control (RBAC) at the project level. Organization
 
 ## Getting Started
 
+You can interact with Showbiz through the **Web UI**, the **CLI**, or **Terraform**:
+
+- **CLI** — `showbiz auth login`, then manage resources from your terminal. See the [CLI section](#cli-tool) below.
+- **Terraform** — Declare Showbiz resources as HCL. See the [Terraform Provider section](#terraform-provider) below.
+- **Web UI** — Browser-based dashboard at [localhost:5173](http://localhost:5173).
+
 See the [Local Development Guide](local-development.md) to set up your environment, or jump straight to the [Services documentation](services.md) to understand each component.

@@ -133,6 +133,148 @@ The Web UI is a browser-based dashboard for managing all Showbiz resources.
 ```
 
 - The **UI** talks to the **API** over HTTP (proxied through Vite in development)
+- The **CLI** talks to the **API** via the Go SDK
+- The **Terraform provider** talks to the **API** via the Go SDK
 - The **API** talks to the **FakeProvider** over HTTP when provisioning resources via the `fakeprovider` provider
 - The **FakeProvider** talks to **KubeVirt** via the Kubernetes API to manage virtual machines
 - The **API** stores all persistent state in **MySQL**
+
+---
+
+## CLI Tool
+
+**Location:** `cli/`
+**Language:** Go (Cobra framework)
+**Binary:** `showbiz`
+
+The CLI is a command-line tool for developers to manage Showbiz resources from their terminal. It wraps the Go SDK.
+
+**Installation:**
+
+```bash
+go build -o showbiz ./cli/cmd/showbiz
+```
+
+**Configuration:**
+
+- Config file: `~/.showbiz/config.yaml` (stores API URL, active org)
+- Credentials: `~/.showbiz/credentials.json` (stores JWT + refresh token)
+- Environment variables: `SHOWBIZ_API_URL`, `SHOWBIZ_USERNAME`, `SHOWBIZ_PASSWORD`
+
+**Usage examples:**
+
+```bash
+# Login
+showbiz auth login --username user@example.com --password ****
+
+# Set default org
+showbiz config set org org_123
+
+# Create a project
+showbiz project create --org org_123 --name "my-app"
+
+# Create a connection to an AWS account
+showbiz connection create --project proj_123 \
+  --name "AWS-1234" \
+  --provider aws \
+  --credentials '{"accessKeyId":"AKIA...","secretAccessKey":"..."}' \
+  --config '{"accountId":"123456789012","defaultRegion":"us-east-1"}'
+
+# Create a machine resource
+showbiz resource create --project proj_123 \
+  --connection conn_101 \
+  --type machine \
+  --name web-1 \
+  --values '{"size":"medium","region":"us-east","image":"ubuntu-22.04"}'
+
+# List resources as JSON
+showbiz resource list --project proj_123 --output json
+```
+
+**Command structure:**
+
+| Group | Commands |
+|---|---|
+| `auth` | `login`, `register`, `logout`, `status` |
+| `org` | `list`, `create`, `get`, `update`, `deactivate`, `activate`, `members list/add/remove` |
+| `project` | `list`, `create`, `get`, `update`, `delete` |
+| `connection` | `list`, `create`, `get`, `update`, `delete` |
+| `resource` | `list`, `create`, `get`, `update`, `delete` |
+| `iam` | `policy list/get/create/update/delete`, `attach`, `attachments`, `detach` |
+| `provider` | `list`, `get` |
+| `config` | `set`, `get` |
+| `completion` | `bash`, `zsh`, `fish`, `powershell` |
+
+**Global flags:** `--output json` (default: table), `--no-color`, `--yes` (skip confirmation prompts).
+
+---
+
+## Terraform Provider
+
+**Location:** `terraform/`
+**Language:** Go (Terraform Plugin Framework)
+**Binary:** `terraform-provider-showbiz`
+
+The Terraform provider allows teams to manage Showbiz resources declaratively as infrastructure-as-code.
+
+**Installation:**
+
+```bash
+go build -o terraform-provider-showbiz ./terraform/cmd/terraform-provider-showbiz
+```
+
+**Provider configuration:**
+
+```hcl
+provider "showbiz" {
+  api_url  = "https://api.showbiz.dev"
+  username = var.showbiz_username
+  password = var.showbiz_password
+}
+```
+
+**Available resources:**
+
+| Resource | Description |
+|---|---|
+| `showbiz_project` | Manage projects within an organization |
+| `showbiz_connection` | Manage connections to provider accounts |
+| `showbiz_resource` | Manage resources (machine, network) via a connection |
+| `showbiz_iam_policy` | Manage IAM policies at the organization level |
+| `showbiz_policy_attachment` | Attach a policy to a user on a project |
+
+**Available data sources:**
+
+| Data Source | Description |
+|---|---|
+| `showbiz_project` | Look up an existing project |
+| `showbiz_connection` | Look up an existing connection |
+| `showbiz_resource` | Look up an existing resource |
+| `showbiz_provider` | Look up available cloud providers |
+
+**Example:**
+
+```hcl
+resource "showbiz_project" "my_app" {
+  organization_id = "org_123"
+  name            = "my-app"
+}
+
+resource "showbiz_connection" "aws_prod" {
+  project_id    = showbiz_project.my_app.id
+  name          = "AWS-1234"
+  provider_name = "aws"
+  credentials   = { accessKeyId = var.aws_key, secretAccessKey = var.aws_secret }
+  config        = { accountId = "123456789012", defaultRegion = "us-east-1" }
+}
+
+resource "showbiz_resource" "web_server" {
+  project_id    = showbiz_project.my_app.id
+  connection_id = showbiz_connection.aws_prod.id
+  name          = "web-server-1"
+  resource_type = "machine"
+  values        = { size = "medium", region = "us-east", image = "ubuntu-22.04" }
+}
+```
+
+All resources support `terraform import`.

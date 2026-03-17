@@ -1,6 +1,6 @@
 # Terraform Provider Design
 
-> Status: 🟡 In Design
+> Status: 🟢 Implemented
 
 ## Overview
 
